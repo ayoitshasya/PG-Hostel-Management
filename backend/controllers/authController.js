@@ -48,14 +48,19 @@ exports.signup = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ error: "email and password required" });
+  const { email, password, role } = req.body;
+
+  if (!email || !password || !role)
+    return res.status(400).json({ error: "email, password, and role required" });
 
   const user = await User.findOne({ email: email.toLowerCase() });
   if (!user) return res.status(401).json({ error: "Invalid credentials" });
+
   const ok = await user.verifyPassword(password);
   if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+
+  if (user.role.toLowerCase() !== role.toLowerCase())
+    return res.status(403).json({ error: `Access denied: This account is registered as '${user.role} and ${role}'` });
 
   const token = generateToken(user);
   res.json({
@@ -70,3 +75,4 @@ exports.login = async (req, res) => {
     },
   });
 };
+
