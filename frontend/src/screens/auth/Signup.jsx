@@ -1,53 +1,215 @@
-// src/screens/auth/Signup.jsx
-import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 
-export default function Signup(){
+export default function RoomieSignup() {
   const { signup } = useContext(AuthContext);
-  const [form, setForm] = useState({ name:'', email:'', password:'', role:'tenant' });
+  const [role, setRole] = useState("tenant");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [loading, setLoading] = useState(false);
   const nav = useNavigate();
 
-  async function handleSubmit(e){
+  async function handleSubmit(e) {
     e.preventDefault();
+
+    if (!name.trim() || !email.trim() || !password) {
+      alert("Name, email and password are required.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      await signup(form);
-      nav('/');
+      const payload = {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        role: (role || "tenant").toLowerCase(),
+        phone: phone.trim() || undefined,
+        avatarUrl: avatarUrl?.trim() || undefined,
+      };
+
+      const user = await signup(payload);
+      console.log("signup success -> user:", user);
+
+      nav("/");
     } catch (err) {
-      alert(err.response?.data?.message || 'Signup failed');
+      console.error("Signup error:", err);
+
+      const serverMessage =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.response?.data ||
+        err?.message;
+
+      alert(serverMessage || "Signup failed");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center">
-      <div className="w-full max-w-lg bg-white rounded-xl shadow p-6">
-        <h2 className="text-2xl font-semibold mb-2">Create account</h2>
+    <div className="min-h-screen flex items-start justify-center py-28 bg-[#f5f7f8]">
+      <main className="w-[760px] max-w-[92%] text-center">
+        <div className="flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14 10.5 9.5 6 8l4.5-1.5L12 2z"
+                fill="#13a3e9"
+                opacity="0.95"
+              />
+            </svg>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit} className="grid gap-4">
-          <input value={form.name} onChange={e=>setForm({...form, name:e.target.value})}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-primary/30"
-            placeholder="Full name" />
+        <h1 className="mt-6 text-4xl font-extrabold text-slate-900">
+          Create your account
+        </h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Your perfect stay is just a click away
+        </p>
 
-          <input value={form.email} onChange={e=>setForm({...form, email:e.target.value})}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-primary/30"
-            placeholder="Email" />
+        <section className="mt-8 bg-transparent flex flex-col items-center">
+          <div className="w-[560px] max-w-full rounded-xl p-1 border border-white shadow-inner bg-white/60 segmented">
+            <div className="flex rounded-lg overflow-hidden">
+              <button
+                onClick={() => setRole("renter")}
+                className={`flex-1 py-3 px-6 text-lg font-medium border-r border-white transition-all ${
+                  role === "renter"
+                    ? "text-white bg-[#13a3e9]"
+                    : "text-slate-600 bg-transparent"
+                }`}
+              >
+                Renter
+              </button>
 
-          <input value={form.password} onChange={e=>setForm({...form, password:e.target.value})}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-primary/30"
-            placeholder="Password" type="password" />
+              <button
+                onClick={() => setRole("tenant")}
+                className={`flex-1 py-3 px-6 text-lg font-medium transition-all ${
+                  role === "tenant"
+                    ? "text-white bg-[#13a3e9]"
+                    : "text-slate-600 bg-transparent"
+                }`}
+              >
+                Tenant
+              </button>
+            </div>
+          </div>
 
-          <label className="text-sm text-gray-600">
-            Role
-            <select value={form.role} onChange={e=>setForm({...form, role:e.target.value})}
-              className="ml-2 px-3 py-2 border rounded-lg">
-              <option value="tenant">Tenant</option>
-              <option value="renter">Renter</option>
-            </select>
-          </label>
+          <form
+            className="mt-6 w-[560px] max-w-full text-left space-y-5"
+            onSubmit={handleSubmit}
+          >
+            <div>
+              <label className="sr-only" htmlFor="name">
+                Full name
+              </label>
+              <input
+                id="name"
+                type="text"
+                placeholder="Full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-lg px-4 py-4 placeholder:text-slate-400 text-slate-700 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 glass-input"
+                required
+              />
+            </div>
 
-          <button className="mt-2 py-2 rounded-lg bg-primary text-white">Sign up</button>
-        </form>
-      </div>
+            <div>
+              <label className="sr-only" htmlFor="email">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-lg px-4 py-4 placeholder:text-slate-400 text-slate-700 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 glass-input"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="sr-only" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg px-4 py-4 placeholder:text-slate-400 text-slate-700 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 glass-input"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                id="phone"
+                type="tel"
+                placeholder="Phone (optional)"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full rounded-lg px-4 py-3 placeholder:text-slate-400 text-slate-700 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 glass-input"
+              />
+              <input
+                id="avatar"
+                type="url"
+                placeholder="Avatar URL (optional)"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                className="w-full rounded-lg px-4 py-3 placeholder:text-slate-400 text-slate-700 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 glass-input"
+              />
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 rounded-lg font-semibold text-white text-lg"
+                style={{
+                  background: "linear-gradient(180deg,#13a3e9,#0d94d6)",
+                  boxShadow: "0 8px 20px rgba(19,163,233,0.18)",
+                }}
+              >
+                {loading ? "Creating account..." : "Create Account"}
+              </button>
+            </div>
+
+            <p className="text-center text-sm text-sky-600 mt-3">
+              Already have an account?{" "}
+              <a href="/login" className="font-medium underline">
+                Login
+              </a>
+            </p>
+          </form>
+        </section>
+      </main>
+
+      <style jsx>{`
+        :root {
+          --brand: #13a3e9;
+        }
+        .segmented {
+          box-shadow: 0 6px 18px rgba(2, 6, 23, 0.04);
+        }
+        .glass-input {
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(2px);
+        }
+      `}</style>
     </div>
   );
 }

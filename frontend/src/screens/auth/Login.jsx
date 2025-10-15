@@ -109,7 +109,7 @@ export default function RoomieLogin() {
             </div>
 
             <p className="text-center text-sm text-sky-600 mt-3">
-              Already have an account? <a href="#" className="font-medium underline">Login</a>
+              Dont have an account? <a href="#" className="font-medium underline">Sign Up</a>
             </p>
           </form>
         </section>
