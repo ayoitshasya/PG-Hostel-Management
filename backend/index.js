@@ -1,5 +1,6 @@
 require('dotenv').config();
 require('express-async-errors');
+const cors = require('cors');
 const express = require('express');
 const mongoose = require('mongoose');
 
@@ -8,6 +9,13 @@ const propertyRoutes = require('./routes/properties');
 const inquiryRoutes = require('./routes/inquiries');
 
 const app = express();
+
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET','POST','PUT','DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json());
 
 // API routes
