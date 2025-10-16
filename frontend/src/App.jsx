@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './screens/home';
 import NotFound from './screens/notfound';
 import Login from './screens/auth/Login';
+import Find from './screens/dashboard/Find';
 import Signup from './screens/auth/Signup';
 import CreateListing from './screens/listing/CreateListing';
 import ListingDetail from './screens/listing/ListingDetail';
@@ -22,11 +23,12 @@ export default function App(){
         <Route path="/" element={<Home/>} />
         <Route path="/login" element={<Login/>} />
         <Route path="/signup" element={<Signup/>} />
+        <Route path="/find" element={<Find/>} />
 
         <Route path="/listing/:id" element={<ListingDetail/>} />
-        <Route path="/create-listing" element={<ProtectedRoute role="renter"><CreateListing/></ProtectedRoute>} />
-        <Route path="/renter-dashboard" element={<ProtectedRoute role="renter"><RenterDashboard/></ProtectedRoute>} />
-        <Route path="/tenant-dashboard" element={<ProtectedRoute role="tenant"><TenantDashboard/></ProtectedRoute>} />
+        <Route path="/create-listing" element={<ProtectedRoute allowedRoles={["renter"]} ><CreateListing/></ProtectedRoute>} />
+        <Route path="/renter-dashboard" element={<ProtectedRoute allowedRoles={["renter"]} ><RenterDashboard/></ProtectedRoute>} />
+        <Route path="/tenant-dashboard" element={<ProtectedRoute allowedRoles={["tenant"]} ><TenantDashboard/></ProtectedRoute>} />
 
         <Route path="*" element={<NotFound/>} />
       </Routes>
