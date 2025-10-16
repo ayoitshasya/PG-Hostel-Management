@@ -1,4 +1,3 @@
-// src/screens/dashboard/RenterDashboard.jsx
 import React, { useEffect, useState, useContext } from 'react';
 import API from '../../api/api';
 import { AuthContext } from '../../context/AuthContext';
