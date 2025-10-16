@@ -60,7 +60,7 @@ exports.login = async (req, res) => {
   if (!ok) return res.status(401).json({ error: "Invalid credentials" });
 
   if (user.role.toLowerCase() !== role.toLowerCase())
-    return res.status(403).json({ error: `Access denied: This account is registered as '${user.role} and ${role}'` });
+    return res.status(403).json({ error: `Access denied: This account is registered as '${user.role}'` });
 
   const token = generateToken(user);
   res.json({
