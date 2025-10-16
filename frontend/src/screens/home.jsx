@@ -1,41 +1,47 @@
-// src/screens/home.jsx
-import React, { useEffect, useState } from 'react';
-import API from '../api/api';
-import { Link } from 'react-router-dom';
+// RoomieHome.jsx
+import React from "react";
+import { Link } from "react-router-dom";
 
-export default function Home(){
-  const [listings, setListings] = useState([]);
-
-  useEffect(()=> {
-    API.get('/properties').then(r => setListings(r.data)).catch(()=>{/* ignore */});
-  }, []);
-
+export default function RoomieHome() {
   return (
-    <main className="container-centered py-10">
-      <div className="max-w-3xl mx-auto text-center">
-        <h1 className="text-4xl font-extrabold text-gray-900">Find Your Perfect Room</h1>
-        <p className="mt-3 text-gray-600">Explore PG/Hostel listings tailored to your needs.</p>
-      </div>
+    <div className="min-h-[80vh] flex flex-col bg-[#ffffff] text-slate-800">
+      
+      {/* HERO SECTION */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+        <div className="relative w-full max-w-5xl rounded-2xl overflow-hidden shadow-lg">
+          {/* Background Image */}
+          <img
+            src="https://images.unsplash.com/photo-1564078516393-cf04bd966897?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1600"
+            alt="PG Room"
+            className="w-full h-[420px] md:h-[500px] object-cover"
+          />
 
-      <section className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {listings.map(l => (
-          <Link to={`/listing/${l._id}`} key={l._id} className="block group">
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border hover:shadow-md transition">
-              <div className="h-44 bg-gray-100" aria-hidden>{/* image placeholder */}</div>
-
-              <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary">{l.title}</h3>
-                <p className="mt-2 text-sm text-gray-600">{l.description?.slice(0,80) || '—'}</p>
-
-                <div className="mt-4 flex items-center justify-between text-sm text-gray-700">
-                  <div>{l.price ? `$${l.price}/month` : 'Price on request'}</div>
-                  <div className="text-xs px-2 py-1 bg-gray-100 rounded">{l.targetAudience || 'All'}</div>
-                </div>
-              </div>
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-center text-white p-6 md:p-12">
+            <h1 className="text-3xl md:text-5xl font-extrabold mb-4">
+              Find Your Perfect Room
+            </h1>
+            <p className="text-base md:text-lg max-w-2xl text-gray-200 mb-6">
+              Discover comfortable and affordable PG accommodations tailored to your needs.
+              Whether you’re a student or a working professional, we have the perfect space for you.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link
+                to="/find"
+                className="px-6 py-3 bg-sky-500 text-white rounded-lg font-semibold hover:bg-sky-600"
+              >
+                Find a PG
+              </Link>
+              <Link
+                to="/list"
+                className="px-6 py-3 bg-white text-slate-800 rounded-lg font-semibold hover:bg-gray-100"
+              >
+                List Your PG
+              </Link>
             </div>
-          </Link>
-        ))}
-      </section>
-    </main>
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
