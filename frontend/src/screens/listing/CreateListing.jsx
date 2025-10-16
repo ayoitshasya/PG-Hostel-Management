@@ -1,19 +1,8 @@
-// src/screens/listing/CreateListing.jsx
 import React, { useState, useContext } from "react";
 import API from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 
-/**
- * CreateListing - multi-step form for renters to create a property
- *
- * Notes:
- * - Uses your API instance (src/api/api.js) which injects the token.
- * - Server expects property shape similar to docs:
- *   { title, description, propertyType, targetAudience, furnishing, petsAllowed,
- *     amenities:[], rooms:[{name, price, occupancy, availableFrom}], price, currency,
- *     location:{address, lat, lng, googleMapsUrl}, photos:[], status:"available" }
- */
 export default function CreateListing() {
   const { user } = useContext(AuthContext);
   const nav = useNavigate();
@@ -43,12 +32,12 @@ export default function CreateListing() {
   const [rooms, setRooms] = useState([
     { name: "A1", price: "", occupancy: 1, availableFrom: "", status: "available" },
   ]);
-  const [price, setPrice] = useState(""); // default price (can be derived from rooms)
+  const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("INR");
 
   // Photos (urls + local previews)
   const [photoUrls, setPhotoUrls] = useState([]);
-  const [localPreviews, setLocalPreviews] = useState([]); // File previews
+  const [localPreviews, setLocalPreviews] = useState([]);
 
   // Location & contact
   const [address, setAddress] = useState("");
@@ -87,12 +76,10 @@ export default function CreateListing() {
   function handleFileUpload(e) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    // create local preview URLs
     const previews = files.map((f) => {
       return { name: f.name, url: URL.createObjectURL(f), file: f };
     });
     setLocalPreviews((p) => [...p, ...previews]);
-    // Note: in this version we do not upload files to server; instead you can convert to FormData or upload to S3.
   }
 
   function removeLocalPreview(idx) {
@@ -102,15 +89,12 @@ export default function CreateListing() {
     setPhotoUrls((p) => p.filter((_, i) => i !== idx));
   }
 
-  // validation per step
   function validateStep() {
     setError(null);
     if (step === 0) {
       if (!title.trim()) { setError("Property name is required."); return false; }
       if (!propertyType) { setError("Please select a property type."); return false; }
-      // description optional
     } else if (step === 2) {
-      // ensure at least one room with price
       const hasRoomWithPrice = rooms.some((r) => r.price && Number(r.price) > 0);
       if (!hasRoomWithPrice) { setError("Please add at least one room with price."); return false; }
     } else if (step === 4) {
@@ -128,12 +112,10 @@ export default function CreateListing() {
     if (step > 0) setStep((s) => s - 1);
   }
 
-  // final submit
   async function handleSubmit(e) {
     e.preventDefault();
     if (!validateStep()) return;
 
-    // Build payload
     const payload = {
       title: title.trim(),
       description: description.trim(),
@@ -154,7 +136,7 @@ export default function CreateListing() {
       occupancyPerRoom: rooms[0]?.occupancy || 1,
       price: price ? Number(price) : (rooms[0] ? Number(rooms[0].price || 0) : 0),
       currency,
-      photos: photoUrls, // localPreviews not uploaded in this example
+      photos: photoUrls,
       status,
       location: {
         address: address.trim(),
@@ -170,11 +152,9 @@ export default function CreateListing() {
       const res = await API.post("/properties", payload);
       const created = res.data;
       setSuccessMsg("Property created successfully.");
-      // optional: navigate to renter dashboard or listing detail
-      // if created._id exists then go to listing page
+
       const id = created._id || created.id || (res.data && res.data._id);
       if (id) {
-        // small delay so user sees success
         setTimeout(() => nav(`/listing/${id}`), 700);
       } else {
         setTimeout(() => nav("/renter-dashboard"), 700);
@@ -187,7 +167,6 @@ export default function CreateListing() {
     }
   }
 
-  // small UI helpers
   const amenityList = [
     { key: "wifi", label: "Wi-Fi" },
     { key: "parking", label: "Parking" },
