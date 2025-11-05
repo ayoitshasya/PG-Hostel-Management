@@ -1,13 +1,19 @@
-// src/screens/notfound.jsx
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
 
-export default function NotFound(){
+export default function NotFound() {
   return (
-    <div style={{textAlign:'center', padding:80}}>
-      <h1>404 — Not Found</h1>
-      <p>The page you are looking for doesn't exist.</p>
-      <Link to="/">Back to Home</Link>
+    <div className="min-h-[70vh] flex flex-col items-center justify-center px-6">
+      <h1 className="text-6xl font-bold text-slate-900 mb-4">404</h1>
+      <p className="text-xl text-slate-600 mb-8">
+        The page you are looking for doesn't exist.
+      </p>
+      <Link
+        to="/"
+        className="px-6 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition"
+      >
+        Back to Home
+      </Link>
     </div>
   );
 }

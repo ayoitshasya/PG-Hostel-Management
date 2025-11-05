@@ -92,7 +92,7 @@ export default function Header() {
                 Login
               </Link>
               <Link to="/signup" className="inline-block">
-                <button className="ml-2 px-4 py-1.5 rounded-md bg-primary text-white text-sm font-medium hover:brightness-95 transition-all duration-200 shadow-sm">
+                <button className="ml-2 px-4 py-1.5 rounded-md bg-primary text-gray-700 text-sm font-medium hover:brightness-95 transition-all duration-200 shadow-sm">
                   Sign Up
                 </button>
               </Link>
