@@ -2,45 +2,71 @@ const Property = require("../models/Property");
 
 // List properties with filters
 exports.list = async (req, res) => {
-  const {
-    amenities,
-    minPrice,
-    maxPrice,
-    audience,
-    propertyType,
-    furnishing,
-    status,
-    q,
-    page = 1,
-    limit = 20,
-  } = req.query;
-  const filter = {};
+  try {
+    const {
+      amenities,
+      minPrice,
+      maxPrice,
+      audience,
+      propertyType,
+      furnishing,
+      status,
+      query,  // ← Changed from 'q' to match frontend
+      page = 1,
+      limit = 20,
+    } = req.query;
 
-  if (amenities) {
-    const arr = String(amenities)
-      .split(",")
-      .map((a) => a.trim())
-      .filter(Boolean);
-    if (arr.length) filter.amenities = { $all: arr };
+    console.log("Received query params:", req.query);
+
+    const filter = {};
+
+    if (amenities) {
+      const arr = String(amenities)
+        .split(",")
+        .map((a) => a.trim())
+        .filter(Boolean);
+      if (arr.length) filter.amenities = { $all: arr };
+    }
+
+    if (minPrice)
+      filter.price = { ...(filter.price || {}), $gte: Number(minPrice) };
+    
+    if (maxPrice)
+      filter.price = { ...(filter.price || {}), $lte: Number(maxPrice) };
+    
+    if (audience) filter.targetAudience = audience;
+    
+    if (propertyType) filter.propertyType = propertyType;
+    
+    if (furnishing) filter.furnishing = furnishing;
+    
+    if (status) filter.status = status;
+    
+    // Use regex instead of $text for simpler search
+    if (query) {
+      filter.$or = [
+        { title: { $regex: query, $options: 'i' } },
+        { description: { $regex: query, $options: 'i' } },
+        { 'location.address': { $regex: query, $options: 'i' } }
+      ];
+    }
+
+    console.log("Applied filter:", JSON.stringify(filter));
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const results = await Property.find(filter)
+      .populate("owner", "name email phone avatarUrl")
+      .skip(skip)
+      .limit(Number(limit))
+      .exec();
+
+    console.log(`Found ${results.length} properties`);
+
+    res.json({ results });
+  } catch (error) {
+    console.error("List properties error:", error);
+    res.status(500).json({ error: error.message });
   }
-  if (minPrice)
-    filter.price = { ...(filter.price || {}), $gte: Number(minPrice) };
-  if (maxPrice)
-    filter.price = { ...(filter.price || {}), $lte: Number(maxPrice) };
-  if (audience) filter.targetAudience = audience;
-  if (propertyType) filter.propertyType = propertyType;
-  if (furnishing) filter.furnishing = furnishing;
-  if (status) filter.status = status;
-  if (q) filter.$text = { $search: q };
-
-  const skip = (Number(page) - 1) * Number(limit);
-  const results = await Property.find(filter)
-    .populate("owner", "name email phone avatarUrl")
-    .skip(skip)
-    .limit(Number(limit))
-    .exec();
-
-  res.json({ results });
 };
 
 // Get by ID
