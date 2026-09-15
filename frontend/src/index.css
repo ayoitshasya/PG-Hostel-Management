@@ -1,1 +1,34 @@
 @import "tailwindcss";
+
+/* Tailwind v4 is CSS-first: it does not read tailwind.config.js unless a
+   file explicitly does `@config "../tailwind.config.js";` (this project
+   never did). That file's `primary`/`primary-dark` color definitions were
+   therefore never actually compiled into any CSS - bg-primary/text-primary
+   silently generated nothing, the whole time, since the very first phase.
+   Defining the theme here instead, the way v4 actually expects. */
+@theme {
+  /* Pure brand blue - #13a3e9 vs white is 2.82:1, which fails WCAG AA even
+     for large/bold text (needs 3:1), let alone normal text (needs 4.5:1).
+     No text size passes on a white background, so keep this for non-text
+     decorative use only (e.g. the logo mark). */
+  --color-primary: #13a3e9;
+  /* Same hue, darkened until it passes: 6.47:1 against pure white.
+     Deliberately darker than the ~4.5:1 minimum - Login/Signup use an
+     off-white page background (#f5f7f8, not #fff), and #0a7bb5 (4.65:1
+     against white) dropped to 4.33:1 there, just under the threshold.
+     This shade keeps margin against any near-white background instead
+     of tuning to one exact color. Used for anything with text on/as it. */
+  --color-primary-dark: #086492;
+}
+
+/* Site-wide fallback focus style for keyboard navigation. Tailwind's
+   preflight resets the browser's default focus outline so components can
+   supply their own via focus-visible: utilities; this is the safety net
+   for anything that doesn't (rather than auditing every interactive
+   element individually). :focus-visible only fires for keyboard/
+   programmatic focus, not mouse clicks, so this doesn't add a ring around
+   buttons after every click. */
+:focus-visible {
+  outline: 2px solid #0d94d6;
+  outline-offset: 2px;
+}
