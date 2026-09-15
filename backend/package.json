@@ -5,7 +5,9 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "seed": "node seed.js"
+    "seed": "node seed.js",
+    "migrate:amenities": "node migrate-amenities.js",
+    "migrate:amenities:dry": "node migrate-amenities.js --dry-run"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
