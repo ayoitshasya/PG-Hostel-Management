@@ -307,10 +307,10 @@ wasn't what surfaced them, an ordinary single-browser run would have too):
   `""` is a defined value and gets checked against the enum, unlike an
   absent field. Fixed by sending `undefined` instead of `""` so the field is
   genuinely absent and `furnishing` falls back to its schema default.
-- `/find` has two buttons both accessibly named "Search" (the tab and the
-  actual submit button), which is fine for sighted mouse users but ambiguous
+- `/find` had two buttons both accessibly named "Search" (the tab and the
+  actual submit button), which was fine for sighted mouse users but ambiguous
   for anything resolving by accessible name/role — including screen readers,
-  not just this test suite.
+  not just this test suite. Fixed by renaming the tab to "Browse".
 
 ---
 

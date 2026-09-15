@@ -991,14 +991,15 @@ there's nothing to report as a browser compatibility fix from this phase.
    Fixed by sending `targetAudience: targetAudience || undefined` and
    `furnishing: furnishing || undefined` in the create-listing payload, so
    an unpicked field is genuinely absent instead of an empty string.
-2. **`/find` has two buttons both accessibly named "Search"** - the
+2. **`/find` had two buttons both accessibly named "Search"** - the
    "Search" tab and the actual form's submit button. Not a bug in the
-   sense of broken behavior (sighted mouse users never notice), but a real
-   accessible-name collision: anything resolving elements by role+name
-   (assistive tech, this test suite) can't distinguish them without extra
-   scoping. Worked around in the test by scoping to the `<form>`; left as
-   a known limitation below rather than renaming a visible tab label as a
-   side effect of writing a test.
+   sense of broken behavior (sighted mouse users never noticed), but a
+   real accessible-name collision: anything resolving elements by
+   role+name (assistive tech, this test suite) couldn't distinguish them
+   without extra scoping. Initially worked around in the test by scoping
+   to the `<form>` rather than renaming a visible label as a side effect
+   of writing a test; the label rename (tab: "Search" -> "Browse") was a
+   deliberate follow-up design decision, made 2026-09-16 - see below.
 
 ### Two config bugs, not app bugs (worth documenting since they cost real
 debugging time)
@@ -1022,9 +1023,13 @@ All three `responsive.spec.js` checks (no horizontal overflow on `/`,
 `/find`, and a listing detail page; key controls reachable) pass on a real
 Pixel 5 viewport (393x851), not just a resized desktop window.
 
-### Known limitation carried forward
+### Known limitation - resolved (2026-09-16)
 
 The `/find` "Search" tab and submit button accessible-name collision above
-is real and unfixed - out of scope for this testing phase, since fixing it
-means changing a visible UI label, a design decision rather than a test
-fix.
+was fixed by renaming the tab to "Browse" (`Find.jsx`), a genuinely
+different label from "browse and filter listings" rather than "search" -
+the tab shows the whole search form plus results, "Browse" describes that
+better anyway. The `core-flow.spec.js` `<form>` scoping this collision had
+required was reverted to a plain `getByRole('button', { name: 'Search' })`
+once the collision no longer existed. Full suite re-confirmed 15/15
+passing after the change.
