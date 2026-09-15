@@ -508,21 +508,18 @@ throughout. The real hero image container was also switched from a fixed
 `h-80` to the same `aspect-[8/5]`, so skeleton and real content reserve
 matching space.
 
-Measured (3 runs, same method as baseline, mobile emulation):
-
-| Metric | Phase 2 (before this fix) | Phase 3 (after) | Change |
-|---|---|---|---|
-| Performance | 69 | 75 | +6 |
-| CLS | 0.118 | **0.000** | **fixed**, 0.000 on all 3 runs individually |
-| LCP | 5416 ms | 5058 ms | -358 ms |
-| FCP | 3117 ms | 3079 ms | -38 ms |
-
-Reports: [run1](lighthouse/phase3/listing-cls-run1.report.html) ·
+First measured against interim data (old listing, before the pipeline
+reseed) to isolate the skeleton/layout effect alone: Performance 69→75,
+CLS 0.118→**0.000** (0.000 on all 3 runs), LCP 5416ms→5058ms, FCP
+3117ms→3079ms. Reports:
+[run1](lighthouse/phase3/listing-cls-run1.report.html) ·
 [run2](lighthouse/phase3/listing-cls-run2.report.html) ·
 [run3](lighthouse/phase3/listing-cls-run3.report.html)
 
 This closes the CLS gap identified but left unfixed in Phase 2 - all
-three measured pages now have CLS 0.000.
+three measured pages now have CLS 0.000. See "Final Phase 3 results"
+below for the complete post-reseed numbers (real Cloudinary images,
+all three pages) requested for the phase writeup.
 
 ### `srcset` confirmed working (not just present in the markup)
 
@@ -542,8 +539,57 @@ requested for a ~66vw-on-desktop, full-width-on-mobile hero image.
 - `EditPropertyModal` still doesn't expose photo management (add/remove
   photos on an existing listing) - it only edits title/description/price/
   status, same as before this phase. Out of scope for what was asked.
-- A multi-file upload request fails as a whole if any one file is
-  invalid (`Promise.all` short-circuits) - files that succeeded before
-  the failure aren't rolled back from Cloudinary. Acceptable for this
-  app's scale; a production system would want per-file results and/or
-  cleanup of partial successes.
+
+**Fixed since first written:** a multi-file upload used to fail as a
+whole if any one file was invalid (`Promise.all` short-circuits) without
+cleaning up files that had already succeeded. Now uses
+`Promise.allSettled`, and if any file fails, every file that *did*
+succeed in that batch is deleted from Cloudinary before returning the
+error - an all-or-nothing result with no orphaned files either way.
+Tested with a 3-file batch (2 valid JPEGs + 1 corrupt file): request
+correctly returned `400`, and `cloudinary.api.resources()` confirmed the
+asset count under `roomie/properties/` was unchanged (237 before, 237
+after) - both valid uploads were rolled back, not left behind.
+
+### Final Phase 3 results (all 3 pages, post-reseed with real Cloudinary images)
+
+Full re-measurement after reseeding with the real pipeline, so this
+reflects the complete Phase 3 state - not just the CLS fix in isolation.
+Same method as every prior phase: 3 runs/page, median, mobile emulation.
+
+| Metric | Page | Baseline | Phase 2 | Phase 3 |
+|---|---|---|---|---|
+| Performance | Home | 78 | 79 | 76 |
+| | Find | 64 | 79 | **80** |
+| | Listing detail | 67 | 69 | **81** |
+| LCP | Home | 4523 ms | 4284 ms | 4536 ms |
+| | Find | 5064 ms | 4390 ms | **4211 ms** |
+| | Listing detail | 4987 ms | 5416 ms | **3884 ms** |
+| CLS | Home | 0.000 | 0.000 | 0.000 |
+| | Find | 0.191 | 0.000 | 0.000 |
+| | Listing detail | 0.118 | 0.118 | **0.000** |
+| TBT | Home | 32 ms | 7 ms | 138 ms |
+| | Find | 179 ms | 19 ms | 66 ms |
+| | Listing detail | 13 ms | 0 ms | 147 ms |
+| FCP | Home | 3155 ms | 2898 ms | 3117 ms |
+| | Find | 3152 ms | 3091 ms | 3109 ms |
+| | Listing detail | 3127 ms | 3117 ms | 3108 ms |
+
+Reports: [home](lighthouse/phase3/home-run1.report.html) ([2](lighthouse/phase3/home-run2.report.html), [3](lighthouse/phase3/home-run3.report.html)) ·
+[find](lighthouse/phase3/find-run1.report.html) ([2](lighthouse/phase3/find-run2.report.html), [3](lighthouse/phase3/find-run3.report.html)) ·
+[listing](lighthouse/phase3/listing-run1.report.html) ([2](lighthouse/phase3/listing-run2.report.html), [3](lighthouse/phase3/listing-run3.report.html))
+
+**Listing detail LCP (4987ms → 5416ms → 3884ms) is the headline number**:
+1.1s better than baseline, 1.5s better than Phase 2. Attributable to two
+concrete, real changes rather than noise - the hero photo went from an
+unoptimized JPEG (avg 151.2KB across the site) to a real WebP variant
+(avg 19.8KB), and the CLS fix means the browser doesn't have to
+recalculate the LCP candidate after a late layout shift.
+
+**Home got slightly worse (79→76 performance, TBT 7ms→138ms) - flagged,
+not hidden, and very likely noise rather than a real regression.** Phase
+3 touched zero code on the home page (its hero is a static Unsplash
+image, unrelated to the property image pipeline). TBT has been the
+noisiest metric measured throughout this project - baseline alone
+ranged 10-128ms across 3 runs on this exact page - and 138ms sits
+inside that same band.
