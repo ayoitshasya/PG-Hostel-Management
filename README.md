@@ -272,6 +272,46 @@ If you change ports or deploy, set `VITE_API_URL` (frontend) and
 3. Sign up (or log in as) a **tenant** in a second browser/incognito session, browse `/find`, open the listing, and send an inquiry.
 4. Log back in as the renter and view the inquiry at `/renter-dashboard` (currently only the tenant's own dashboard surfaces inquiry status in the UI; the renter-side inquiry inbox API exists at `GET /api/inquiries` but isn't yet wired into `RenterDashboard.jsx`).
 
+### End-to-end tests (Playwright)
+Cross-browser tests live in their own `e2e/` package (separate from `frontend/`
+and `backend/` so it can't affect either deployed build — see its
+`package.json` description). They assume the backend and frontend dev
+servers are already running (see above), rather than starting them
+automatically.
+
+```bash
+cd e2e
+npm install
+npx playwright install   # first time only, downloads browser binaries
+npm test                 # runs chromium, firefox, webkit + a mobile-viewport project
+npm run test:mobile      # just the mobile-viewport project (Pixel 5 dimensions)
+npm run test:headed      # same as `test`, with visible browser windows
+npm run report           # opens the last HTML report
+```
+
+What's covered:
+- `core-flow.spec.js` — a full renter → tenant journey through the real UI: signup, create a listing, search `/find`, open the listing, send an inquiry (including the native `alert()` confirmation and the focus-trapped dialog from Phase 4), and confirm it shows up on the tenant's dashboard. Runs on chromium, firefox, and webkit.
+- `protected-routes.spec.js` — unauthenticated and wrong-role visitors are redirected away from role-gated routes. Runs on chromium, firefox, and webkit.
+- `responsive.spec.js` — no horizontal overflow and key CTAs are reachable on a real mobile viewport (Pixel 5, 393×851), on `/`, `/find`, and a listing detail page.
+
+These tests create real users/listings/inquiries through the UI against your
+local dev database — that's expected test data, not a bulk operation; re-run
+freely.
+
+Two real bugs were found and fixed this way (not browser-specific — both
+failed identically on chromium, firefox, and webkit, so cross-browser testing
+wasn't what surfaced them, an ordinary single-browser run would have too):
+- `CreateListing.jsx` sent `targetAudience`/`furnishing` as `""` when a user
+  didn't touch those selects, which the `Property` model's enum validation
+  (added while fixing the `/find` filter bug, see below) rejected outright —
+  `""` is a defined value and gets checked against the enum, unlike an
+  absent field. Fixed by sending `undefined` instead of `""` so the field is
+  genuinely absent and `furnishing` falls back to its schema default.
+- `/find` has two buttons both accessibly named "Search" (the tab and the
+  actual submit button), which is fine for sighted mouse users but ambiguous
+  for anything resolving by accessible name/role — including screen readers,
+  not just this test suite.
+
 ---
 
 ## 7. Deployment

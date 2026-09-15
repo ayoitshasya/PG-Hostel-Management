@@ -945,3 +945,86 @@ app renders are ever seen by the things that matter:**
   something addressable by adding more meta tags. Worth knowing and
   saying plainly rather than letting a 100 Lighthouse SEO score imply
   more than it does.
+
+## Phase 6 — Cross-browser testing with Playwright (2026-09-16)
+
+### What was done
+
+A standalone `e2e/` package (kept separate from `frontend/` and `backend/`
+for the same deployment-root reason as `backend/constants/listingOptions.js`
+- see the Interlude above - Vercel and Render never see a directory that
+isn't their configured root, so it has to live outside both) runs Playwright
+against the real dev servers:
+
+- `core-flow.spec.js` - renter signup → create a listing (full wizard) →
+  tenant signup → search `/find` → open listing → send inquiry (native
+  `alert()`, focus-trapped dialog from Phase 4) → tenant dashboard shows it.
+  One continuous `test.step()`-based journey, since each step's state
+  depends on the previous one. Runs on chromium, firefox, webkit.
+- `protected-routes.spec.js` - unauthenticated visitors and wrong-role
+  users are redirected away from role-gated routes (`/create-listing`,
+  `/renter-dashboard`, `/tenant-dashboard`). Runs on chromium, firefox,
+  webkit.
+- `responsive.spec.js` - no horizontal overflow and key CTAs/controls stay
+  reachable on a real mobile viewport (Playwright's Pixel 5 device, 393x851)
+  on `/`, `/find`, and a listing detail page. Runs only on the "Mobile
+  Chrome" project - repeating the full data-creating flow a 4th time here
+  would just add redundant test data for no extra signal, so this project
+  is scoped to layout/reachability checks only.
+
+Final run: **15/15 passed** (chromium, firefox, webkit, Mobile Chrome).
+
+### Bugs found (not browser-specific)
+
+Both issues below failed identically on chromium, firefox, and webkit -
+that repetition across engines is what indicated a real app/test bug rather
+than a rendering quirk, and neither is specific to any one browser, so
+there's nothing to report as a browser compatibility fix from this phase.
+
+1. **`CreateListing.jsx` sent `""` for untouched `targetAudience`/
+   `furnishing` selects**, which the `Property` model's enum validation
+   (added in the Interlude's filter-bug fix) rejects - `""` is a *defined*
+   value and gets checked against the enum, unlike an absent field, which
+   Mongoose skips validating and falls back to the schema default. A test
+   that (like a real user easily could) left `furnishing` untouched hit
+   `Property validation failed: furnishing: \`\` is not a valid enum value`.
+   Fixed by sending `targetAudience: targetAudience || undefined` and
+   `furnishing: furnishing || undefined` in the create-listing payload, so
+   an unpicked field is genuinely absent instead of an empty string.
+2. **`/find` has two buttons both accessibly named "Search"** - the
+   "Search" tab and the actual form's submit button. Not a bug in the
+   sense of broken behavior (sighted mouse users never notice), but a real
+   accessible-name collision: anything resolving elements by role+name
+   (assistive tech, this test suite) can't distinguish them without extra
+   scoping. Worked around in the test by scoping to the `<form>`; left as
+   a known limitation below rather than renaming a visible tab label as a
+   side effect of writing a test.
+
+### Two config bugs, not app bugs (worth documenting since they cost real
+debugging time)
+
+- **Playwright's `testMatch` on one project does not exclude other
+  projects from a file.** `responsive.spec.js` was first given to only the
+  "Mobile Chrome" project via `testMatch`, expecting the desktop projects
+  to skip it - they didn't, because each project runs everything under
+  `testDir` by default unless explicitly told not to. This surfaced as
+  `responsive.spec.js` failing identically on chromium/firefox/webkit with
+  a strict-mode violation (two "List Your PG" links both visible at
+  desktop widths: the header nav link and the hero CTA). Fixed with
+  `testIgnore: /responsive\.spec\.js/` on the three desktop projects.
+- Also hardened the locator itself (`page.locator('#main-content')`
+  scoping) so the test doesn't depend solely on config to stay
+  unambiguous.
+
+### Mobile viewport confirmed
+
+All three `responsive.spec.js` checks (no horizontal overflow on `/`,
+`/find`, and a listing detail page; key controls reachable) pass on a real
+Pixel 5 viewport (393x851), not just a resized desktop window.
+
+### Known limitation carried forward
+
+The `/find` "Search" tab and submit button accessible-name collision above
+is real and unfixed - out of scope for this testing phase, since fixing it
+means changing a visible UI label, a design decision rather than a test
+fix.
