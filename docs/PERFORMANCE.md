@@ -397,3 +397,153 @@ modestly and consistently. Listing detail is a mixed/inconclusive result
 on the noisier metrics (LCP, Speed Index) but a confirmed non-regression
 on the reliable one (FCP) once the code-splitting decision was corrected
 — and still has a known, documented, unfixed CLS issue to pick up later.
+
+---
+
+## Phase 3 — Real image upload/optimization, and the listing detail CLS fix (2026-09-15)
+
+### Security check before starting
+
+Confirmed before touching any Cloudinary code: `backend/.env` is gitignored
+(`backend/.gitignore` line 2), and `git log --all --full-history -- backend/.env`
+returns nothing — no `.env` file has ever been committed, at any point in
+this repo's history. Credentials were added directly to the local
+`backend/.env` (never pasted into chat, logged, or written to a tracked
+file) and read only via `process.env.*`.
+
+### Pipeline built
+
+`backend/lib/imagePipeline.js` is the shared core, used by both the real
+upload endpoint and the seed script:
+
+1. `sharp(buffer).metadata()` reads real dimensions and EXIF orientation
+   (auto-orient is applied before resizing, then the orientation tag - and
+   all other metadata - is dropped, since `withMetadata()` is never
+   called).
+2. Generates WebP at up to 3 widths (400/800/1200), skipping any width
+   larger than the source image (`withoutEnlargement`, plus filtering
+   target widths against the real source width up front).
+3. Uploads each width as its own real file to Cloudinary under
+   `roomie/properties/` — not a Cloudinary on-the-fly transform URL.
+4. Returns `{width, height, variants: [{width, url, publicId}]}`, stored
+   on `Property.photoAssets` (additive - the existing `photos: [String]`
+   field is untouched, so old data and manually-pasted URLs still render).
+
+`backend/middleware/upload.js` (multer, memory storage) rejects files
+over 8MB or more than 8 per request before they ever reach the pipeline;
+`processAndUploadImage` itself is the real validation layer, since the
+client-supplied MIME type multer checks first is trivially spoofable.
+
+### End-to-end verification (manual, before wiring the UI)
+
+Tested directly against the running backend (temporary scripts, deleted
+after use, test assets cleaned up from Cloudinary afterward):
+
+| Test | Result |
+|---|---|
+| Cloudinary connection (tiny generated image, upload + delete) | OK |
+| Real upload (1000×600 JPEG) → correct variants | Generated 800w/400w, correctly **skipped 1200w** (source narrower than that) |
+| Spoofed mimetype (text content labeled `image/jpeg`) | Rejected: `400`, sharp failed to parse it |
+| Wrong mimetype (`.txt`) | Rejected: `400` at the multer filter, before reaching sharp |
+| Oversized file (9MB) | Rejected: `400`, "File too large - max 8MB per photo" |
+| No auth token | Rejected: `401` |
+| Full lifecycle: upload → create listing with `photoAssets` → fetch it back → delete listing → check Cloudinary | `photoAssets` round-tripped through Mongoose correctly; both variants confirmed **actually deleted** from Cloudinary after the listing was deleted (`cloudinary.api.resource()` returned "not found" for each) |
+
+### Idempotent seeding
+
+The seed script now fetches each picsum source image for real and pushes
+it through the same pipeline (not a shortcut), so seeded listings
+exercise `photoAssets`/`srcset` exactly like production data. To avoid
+piling up duplicate Cloudinary files on every re-run, each photo gets a
+**deterministic Cloudinary `public_id`** keyed to `listing index + photo
+slot` (e.g. `seed-listing3-photo1`), uploaded with `overwrite: true`.
+
+Deliberately *not* keyed to the picsum seed name itself: the 25 picsum
+seeds repeat across 20 listings × up to 5 photos each, so two different
+listings can end up using the same source image. Keying by seed name
+would make them share one Cloudinary asset - harmless until someone
+deletes one of those listings, which would then delete the *other*
+listing's photo too. Keying by listing+slot instead keeps every
+listing's assets independent even when the visible photo is a repeat.
+
+Verified by running the seed script twice in a row and counting assets
+under `roomie/properties/` via `cloudinary.api.resources()` both times:
+
+| Run | Cloudinary assets under `roomie/properties/` |
+|---|---|
+| After 1st seed | 237 |
+| After 2nd seed (immediate re-run) | 237 (unchanged - confirmed idempotent) |
+
+(237 = 79 photos × 3 variants each; every seeded photo is a 1600px-wide
+source, so all three target widths always qualify.)
+
+### Measured image size reduction
+
+From a real Lighthouse network trace against `/find`, comparing the same
+page before (Phase 0, full 1600×1000 JPEGs) and after (Phase 3, pipeline
+WebP variants):
+
+| | Images loaded | Total transferred | Avg size/image |
+|---|---|---|---|
+| Phase 0 baseline | 20 (eager, no lazy loading yet) | 3025 KB | 151.2 KB |
+| Phase 3 | 6 (Phase 2's `loading="lazy"` means only above-the-fold cards load in a cold trace) | 119 KB | 19.8 KB |
+
+The image-count difference between the two rows is Phase 2's lazy
+loading doing its job (not fetching all 20 upfront), so it's not an
+apples-to-apples total. The fair, pipeline-attributable number is the
+**per-image average: 151.2 KB → 19.8 KB, an ~87% reduction** — same
+visual content, WebP instead of unoptimized JPEG, sized to what the card
+actually displays (800w) instead of the full 1600px original.
+
+### Listing detail CLS fix
+
+Replaced the `h-[70vh]` "Loading property details..." text placeholder
+with `ListingDetailSkeleton.jsx`, which mirrors the real page: same
+`max-w-7xl`/`grid-cols-1 lg:grid-cols-3`/`gap-8` structure, an
+`aspect-[8/5]` hero block (rather than a fixed pixel height, so it isn't
+tuned to one listing), placeholder lines for title/badges/description,
+the same 6-item info grid, an amenity-pill row, and a sidebar contact
+card placeholder - sized with Tailwind's rem-based spacing scale
+throughout. The real hero image container was also switched from a fixed
+`h-80` to the same `aspect-[8/5]`, so skeleton and real content reserve
+matching space.
+
+Measured (3 runs, same method as baseline, mobile emulation):
+
+| Metric | Phase 2 (before this fix) | Phase 3 (after) | Change |
+|---|---|---|---|
+| Performance | 69 | 75 | +6 |
+| CLS | 0.118 | **0.000** | **fixed**, 0.000 on all 3 runs individually |
+| LCP | 5416 ms | 5058 ms | -358 ms |
+| FCP | 3117 ms | 3079 ms | -38 ms |
+
+Reports: [run1](lighthouse/phase3/listing-cls-run1.report.html) ·
+[run2](lighthouse/phase3/listing-cls-run2.report.html) ·
+[run3](lighthouse/phase3/listing-cls-run3.report.html)
+
+This closes the CLS gap identified but left unfixed in Phase 2 - all
+three measured pages now have CLS 0.000.
+
+### `srcset` confirmed working (not just present in the markup)
+
+Checked via Lighthouse's network trace, not assumed: on `/find` (mobile
+viewport), the browser requested the **800w** variant for card
+thumbnails - not the 1200w or 400w - matching the card's actual rendered
+width via the `sizes` attribute. Same on the listing detail hero: 800w
+requested for a ~66vw-on-desktop, full-width-on-mobile hero image.
+
+### Known limitations carried forward
+
+- If a renter removes a just-uploaded photo in `CreateListing` before
+  submitting the form, that Cloudinary asset isn't deleted immediately
+  (it's simply excluded from the payload) - it becomes an orphan unless
+  the renter never returns to finish creating that listing. A cleanup
+  job or delete-on-remove call would close this; not built here.
+- `EditPropertyModal` still doesn't expose photo management (add/remove
+  photos on an existing listing) - it only edits title/description/price/
+  status, same as before this phase. Out of scope for what was asked.
+- A multi-file upload request fails as a whole if any one file is
+  invalid (`Promise.all` short-circuits) - files that succeeded before
+  the failure aren't rolled back from Cloudinary. Acceptable for this
+  app's scale; a production system would want per-file results and/or
+  cleanup of partial successes.
