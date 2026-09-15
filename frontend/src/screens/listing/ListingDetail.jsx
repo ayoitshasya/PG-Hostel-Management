@@ -13,6 +13,7 @@
     const [loading, setLoading] = useState(true);
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const [showEditPropertyModal, setShowEditPropertyModal] = useState(false);
+    const [heroImgError, setHeroImgError] = useState(false);
 
     useEffect(() => {
       loadProperty();
@@ -53,12 +54,18 @@
         <div className="max-w-7xl mx-auto px-6 py-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 bg-white rounded-2xl shadow overflow-hidden">
-              {prop.photos && prop.photos.length > 0 ? (
+              {prop.photos && prop.photos.length > 0 && !heroImgError ? (
                 <div className="h-80 w-full">
                   <img
                     src={prop.photos[0]}
                     alt={prop.title}
                     className="w-full h-full object-cover"
+                    width="1600"
+                    height="1000"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                    onError={() => setHeroImgError(true)}
                   />
                 </div>
               ) : (

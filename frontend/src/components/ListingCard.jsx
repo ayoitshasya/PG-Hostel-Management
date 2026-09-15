@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function ListingCard({ property }) {
+// priority: set true only for the single card most likely to be the page's
+// LCP (largest contentful paint) element - e.g. the first card above the
+// fold - so it loads eagerly and with high fetch priority. Every other
+// card stays lazy so the browser doesn't compete for bandwidth loading
+// images the user hasn't scrolled to yet.
+export default function ListingCard({ property, priority = false }) {
   const nav = useNavigate();
+  const [imgError, setImgError] = useState(false);
   const thumbnail = property.photos?.[0] || "";
   const price = property.price ?? property.rooms?.[0]?.price ?? null;
   const priceLabel = price ? `${property.currency ?? "INR"} ${price}` : "Price N/A";
@@ -19,11 +25,17 @@ export default function ListingCard({ property }) {
       className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all overflow-hidden cursor-pointer"
     >
       <div className="w-full h-44 md:h-40 lg:h-44 bg-gray-100">
-        {thumbnail ? (
+        {thumbnail && !imgError ? (
           <img
             src={thumbnail}
             alt={property.title}
             className="w-full h-full object-cover"
+            width="640"
+            height="352"
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={priority ? "high" : "auto"}
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">

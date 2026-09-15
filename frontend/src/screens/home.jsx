@@ -10,6 +10,11 @@ export default function Home() {
             src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.1.0&auto=format&fit=crop&w=1600&q=80"
             alt="Room"
             className="w-full h-[420px] md:h-[500px] object-cover"
+            width="1600"
+            height="500"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
           />
 
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40 flex flex-col items-center justify-center text-center text-white p-6 md:p-12">

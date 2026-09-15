@@ -3,6 +3,11 @@ import { fetchProperties } from "../../api/properties";
 import ListingCard from "../../components/ListingCard";
 import SkeletonCard from "../../components/SkeletonCard";
 
+// Matches the backend's default page size (see propertyController.list's
+// `limit = 20`) so the loading skeleton grid renders the same number of
+// placeholders as the real grid it's replaced by.
+const RESULTS_PAGE_SIZE = 20;
+
 export default function Find() {
   const [activeTab, setActiveTab] = useState("search");
   const [query, setQuery] = useState("");
@@ -14,8 +19,14 @@ export default function Find() {
   
   const [recommended, setRecommended] = useState([]);
   const [results, setResults] = useState([]);
-  const [loadingRecommended, setLoadingRecommended] = useState(false);
-  const [loadingResults, setLoadingResults] = useState(false);
+  // Both fetches always run on mount (see the effect below), so start in
+  // the loading state rather than false. Defaulting to false meant the
+  // very first render showed the tiny "No results found" empty state,
+  // which then jumped to the full-height skeleton/results grid a moment
+  // later - that tiny-to-tall jump was the actual cause of this page's
+  // measured layout shift, not the listing images.
+  const [loadingRecommended, setLoadingRecommended] = useState(true);
+  const [loadingResults, setLoadingResults] = useState(true);
   const [error, setError] = useState(null);
 
   const debounceRef = useRef(null);
@@ -32,7 +43,7 @@ export default function Find() {
   }, [propertyType, targetAudience, minPrice, maxPrice, selectedAmenities]);
 
   function buildParams() {
-    const params = {};
+    const params = { limit: RESULTS_PAGE_SIZE };
     if (query) params.query = query;
     if (propertyType) params.propertyType = propertyType;
     if (targetAudience) params.audience = targetAudience;
@@ -196,7 +207,9 @@ export default function Find() {
               {loadingRecommended
                 ? [1, 2, 3].map((n) => <SkeletonCard key={n} />)
                 : recommended.length > 0
-                ? recommended.map((p) => <ListingCard key={p._id} property={p} />)
+                ? recommended.map((p, idx) => (
+                    <ListingCard key={p._id} property={p} priority={idx === 0} />
+                  ))
                 : (
                   <div className="col-span-3 text-slate-500">No recommendations found.</div>
                 )}
@@ -208,7 +221,7 @@ export default function Find() {
             {error && <div className="mb-4 text-red-600">{error}</div>}
             {loadingResults ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
+                {Array.from({ length: RESULTS_PAGE_SIZE }, (_, i) => (
                   <SkeletonCard key={i} />
                 ))}
               </div>
