@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import API from "../../api/api";
 import { useNavigate } from "react-router-dom";
+import { uploadPropertyPhotos } from "../../api/uploads";
+
+const MAX_UPLOAD_MB = 8;
 
 export default function CreateListing() {
   const nav = useNavigate();
@@ -33,9 +36,14 @@ export default function CreateListing() {
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("INR");
 
-  // Photos (urls + local previews)
+  // Photos: manually pasted URLs (photos: [String] on Property) and real
+  // uploads processed server-side into WebP variants (photoAssets on
+  // Property). Both are optional and both can be used together.
   const [photoUrls, setPhotoUrls] = useState([]);
-  const [localPreviews, setLocalPreviews] = useState([]);
+  const [uploadedAssets, setUploadedAssets] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState(null);
 
   // Location & contact
   const [address, setAddress] = useState("");
@@ -71,17 +79,33 @@ export default function CreateListing() {
     setPhotoUrls((p) => [...p, url]);
   }
 
-  function handleFileUpload(e) {
+  async function handleFileUpload(e) {
     const files = Array.from(e.target.files || []);
+    e.target.value = ""; // allow re-selecting the same file(s) again later
     if (!files.length) return;
-    const previews = files.map((f) => {
-      return { name: f.name, url: URL.createObjectURL(f), file: f };
-    });
-    setLocalPreviews((p) => [...p, ...previews]);
+
+    const oversized = files.find((f) => f.size > MAX_UPLOAD_MB * 1024 * 1024);
+    if (oversized) {
+      setUploadError(`"${oversized.name}" is over ${MAX_UPLOAD_MB}MB - please use a smaller image.`);
+      return;
+    }
+
+    setUploadError(null);
+    setUploading(true);
+    setUploadProgress(0);
+    try {
+      const assets = await uploadPropertyPhotos(files, setUploadProgress);
+      setUploadedAssets((p) => [...p, ...assets]);
+    } catch (err) {
+      setUploadError(err.response?.data?.error || "Upload failed - check your connection and try again.");
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
   }
 
-  function removeLocalPreview(idx) {
-    setLocalPreviews((p) => p.filter((_, i) => i !== idx));
+  function removeUploadedAsset(idx) {
+    setUploadedAssets((p) => p.filter((_, i) => i !== idx));
   }
   function removePhotoUrl(idx) {
     setPhotoUrls((p) => p.filter((_, i) => i !== idx));
@@ -135,6 +159,7 @@ export default function CreateListing() {
       price: price ? Number(price) : (rooms[0] ? Number(rooms[0].price || 0) : 0),
       currency,
       photos: photoUrls,
+      photoAssets: uploadedAssets,
       status,
       location: {
         address: address.trim(),
@@ -346,17 +371,53 @@ export default function CreateListing() {
             </div>
 
             <div>
-              <div className="text-sm font-medium text-slate-700">Upload files (optional)</div>
-              <input type="file" accept="image/*" multiple onChange={handleFileUpload} className="mt-2" />
-              <div className="mt-3 flex flex-wrap gap-3">
-                {localPreviews.map((p, idx) => (
-                  <div key={idx} className="w-28 h-20 rounded overflow-hidden relative border">
-                    <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
-                    <button onClick={() => removeLocalPreview(idx)} className="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 text-xs">✕</button>
+              <div className="text-sm font-medium text-slate-700">Upload photos</div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="mt-2 disabled:opacity-50"
+              />
+
+              {uploading && (
+                <div className="mt-3" role="status" aria-live="polite">
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-sky-500 transition-all"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
                   </div>
-                ))}
+                  <div className="text-xs text-slate-500 mt-1">Uploading... {uploadProgress}%</div>
+                </div>
+              )}
+
+              {uploadError && (
+                <div className="text-sm text-red-600 mt-2" role="alert">{uploadError}</div>
+              )}
+
+              <div className="mt-3 flex flex-wrap gap-3">
+                {uploadedAssets.map((asset, idx) => {
+                  const smallest = [...asset.variants].sort((a, b) => a.width - b.width)[0];
+                  return (
+                    <div key={idx} className="w-28 h-20 rounded overflow-hidden relative border">
+                      <img src={smallest.url} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeUploadedAsset(idx)}
+                        className="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 text-xs"
+                        aria-label={`Remove photo ${idx + 1}`}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="text-xs text-slate-400 mt-2">Note: file uploads need server support (multipart) or S3 signed uploads. This form currently keeps file previews client-side.</div>
+              <div className="text-xs text-slate-400 mt-2">
+                JPEG, PNG, or WebP, up to {MAX_UPLOAD_MB}MB each. Resized and optimized automatically.
+              </div>
             </div>
           </div>
         )}
