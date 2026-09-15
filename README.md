@@ -194,10 +194,17 @@ MONGODB_URI=mongodb://localhost:27017/pg_hostel
 PORT=5000
 JWT_SECRET=<any long random string>
 CLIENT_ORIGIN=http://localhost:5173
+CLOUDINARY_CLOUD_NAME=<from your Cloudinary dashboard>
+CLOUDINARY_API_KEY=<from your Cloudinary dashboard>
+CLOUDINARY_API_SECRET=<from your Cloudinary dashboard>
 ```
 `CLIENT_ORIGIN` is the single origin allowed to call this API (sets the CORS
 `Access-Control-Allow-Origin` header) — set it to your deployed frontend's
-URL in production.
+URL in production. The `CLOUDINARY_*` vars are used to upload listing
+photos (see [Image uploads](#image-uploads) below) — get them from
+[cloudinary.com](https://cloudinary.com)'s dashboard after creating a free
+account. Photo upload/edit/delete won't work without them, but the rest of
+the app runs fine if they're unset.
 
 The API starts on `http://localhost:5000` (or your `PORT`).
 
@@ -207,6 +214,29 @@ cd backend
 npm run seed    # wipes Users/Properties/Inquiries in MONGODB_URI's database and creates fresh sample data
 ```
 Creates ~4 renters, ~5 tenants, and ~20 listings with realistic details and photo URLs, so pages have real content to browse or measure performance against. **This deletes existing Users/Properties/Inquiries data in the target database** — only run it against a dev database.
+
+### Image uploads
+
+Listing photos uploaded through `/create-listing` go through a real
+server-side pipeline, not just a URL field:
+
+1. `POST /api/uploads/photos` (authenticated, renter only) accepts up to 8
+   image files (JPEG/PNG/WebP, 8MB max each — `backend/middleware/upload.js`).
+2. `backend/lib/imagePipeline.js` validates each file is actually a decodable
+   image (via `sharp`, independent of the browser-supplied MIME type), reads
+   its EXIF orientation and auto-rotates, strips all metadata, and generates
+   WebP versions at up to three widths (400/800/1200px — never upscaled past
+   the original).
+3. Each width is uploaded to Cloudinary as its own stored file (not a
+   Cloudinary on-the-fly transformation URL) under the `roomie/properties`
+   folder, and the resulting URLs/widths/Cloudinary `public_id`s are saved on
+   the `Property` document's `photoAssets` field.
+4. The frontend renders `photoAssets` with `srcset`/`sizes` so the browser
+   picks the right width automatically. Deleting a listing deletes all of
+   its Cloudinary files too.
+
+The older `photos: [String]` field (plain pasted URLs) still works
+alongside this — both render, so existing data doesn't need migrating.
 
 ### Frontend setup
 ```bash

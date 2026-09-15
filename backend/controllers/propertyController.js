@@ -1,4 +1,5 @@
 const Property = require("../models/Property");
+const { deletePhotoAssets } = require("../lib/imagePipeline");
 
 // List properties with filters
 exports.list = async (req, res) => {
@@ -115,6 +116,10 @@ exports.remove = async (req, res) => {
   if (!prop) return res.status(404).json({ error: "Property not found" });
   if (prop.owner.toString() !== req.user._id.toString())
     return res.status(403).json({ error: "Forbidden: not the owner" });
+
+  if (prop.photoAssets && prop.photoAssets.length) {
+    await deletePhotoAssets(prop.photoAssets);
+  }
 
   await prop.deleteOne();
   res.json({ success: true });

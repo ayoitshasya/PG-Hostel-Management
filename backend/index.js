@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
 const propertyRoutes = require('./routes/properties');
 const inquiryRoutes = require('./routes/inquiries');
+const uploadRoutes = require('./routes/uploads');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/inquiries', inquiryRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 app.get('/', (req, res) => res.json({ ok: true }));
 
