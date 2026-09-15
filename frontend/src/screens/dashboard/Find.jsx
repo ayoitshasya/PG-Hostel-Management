@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { fetchProperties } from "../../api/properties";
 import ListingCard from "../../components/ListingCard";
 import SkeletonCard from "../../components/SkeletonCard";
+import useListingOptions from "../../hooks/useListingOptions";
 
 // Matches the backend's default page size (see propertyController.list's
 // `limit = 20`) so the loading skeleton grid renders the same number of
@@ -28,6 +29,7 @@ export default function Find() {
   const [loadingRecommended, setLoadingRecommended] = useState(true);
   const [loadingResults, setLoadingResults] = useState(true);
   const [error, setError] = useState(null);
+  const { options, loading: optionsLoading } = useListingOptions();
 
   const debounceRef = useRef(null);
 
@@ -153,9 +155,9 @@ export default function Find() {
               className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
             >
               <option value="">All Types</option>
-              <option value="PG">PG</option>
-              <option value="Apartment">Apartment</option>
-              <option value="Hostel">Hostel</option>
+              {options.propertyTypes.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
             </select>
           </label>
 
@@ -167,9 +169,9 @@ export default function Find() {
               className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
             >
               <option value="">All Audiences</option>
-              <option value="women">Women</option>
-              <option value="men">Men</option>
-              <option value="co-ed">Co-ed</option>
+              {options.audiences.map((a) => (
+                <option key={a.value} value={a.value}>{a.label}</option>
+              ))}
             </select>
           </label>
 
@@ -197,19 +199,20 @@ export default function Find() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {["wifi", "parking", "laundry", "ac"].map((amenity) => (
+          {optionsLoading && <span className="text-sm text-slate-500">Loading filters...</span>}
+          {options.amenities.map((amenity) => (
             <button
-              key={amenity}
+              key={amenity.value}
               type="button"
-              onClick={() => toggleAmenity(amenity)}
-              aria-pressed={selectedAmenities.includes(amenity)}
+              onClick={() => toggleAmenity(amenity.value)}
+              aria-pressed={selectedAmenities.includes(amenity.value)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedAmenities.includes(amenity)
+                selectedAmenities.includes(amenity.value)
                   ? "bg-primary-dark text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {amenity}
+              {amenity.label}
             </button>
           ))}
         </div>

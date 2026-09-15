@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { getPrimaryPhoto } from "../utils/images";
+import { amenityLabel } from "../api/meta";
+import useListingOptions from "../hooks/useListingOptions";
 
 // Card is up to 1/3 of the viewport width on large screens (grid-cols-3),
 // 1/2 on medium (grid-cols-2), full width below that - matches the grid
@@ -21,6 +23,7 @@ const CARD_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw";
 export default function ListingCard({ property, priority = false, headingLevel = 3 }) {
   const HeadingTag = `h${headingLevel}`;
   const [imgError, setImgError] = useState(false);
+  const { options } = useListingOptions();
   const photo = getPrimaryPhoto(property);
   const price = property.price ?? property.rooms?.[0]?.price ?? null;
   const priceLabel = price ? `${property.currency ?? "INR"} ${price}` : "Price N/A";
@@ -81,7 +84,7 @@ export default function ListingCard({ property, priority = false, headingLevel =
               key={a}
               className="text-xs text-slate-500 bg-slate-50 px-2 py-0.5 rounded"
             >
-              {a}
+              {amenityLabel(options, a)}
             </span>
           ))}
         </div>

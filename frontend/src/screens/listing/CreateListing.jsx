@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import API from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import { uploadPropertyPhotos } from "../../api/uploads";
+import useListingOptions from "../../hooks/useListingOptions";
 
 const MAX_UPLOAD_MB = 8;
 
 export default function CreateListing() {
   const nav = useNavigate();
+  const { options, loading: optionsLoading } = useListingOptions();
 
   // Stepper
   const steps = ["Basic", "Amenities", "Rooms & Pricing", "Photos", "Location & Contact"];
@@ -19,15 +21,9 @@ export default function CreateListing() {
   const [furnishing, setFurnishing] = useState("");
   const [description, setDescription] = useState("");
 
-  // Amenities
-  const [amenities, setAmenities] = useState({
-    wifi: false,
-    parking: false,
-    laundry: false,
-    gas: false,
-    ac: false,
-    hotWater: false,
-  });
+  // Amenities: array of selected canonical slugs (from GET /api/meta/options),
+  // matching Find.jsx's filter state so the same values round-trip cleanly.
+  const [selectedAmenities, setSelectedAmenities] = useState([]);
 
   // Rooms
   const [rooms, setRooms] = useState([
@@ -60,8 +56,10 @@ export default function CreateListing() {
   const [successMsg, setSuccessMsg] = useState(null);
 
   // helpers
-  function toggleAmenity(key) {
-    setAmenities((s) => ({ ...s, [key]: !s[key] }));
+  function toggleAmenity(value) {
+    setSelectedAmenities((prev) =>
+      prev.includes(value) ? prev.filter((a) => a !== value) : [...prev, value]
+    );
   }
 
   function addRoom() {
@@ -146,7 +144,7 @@ export default function CreateListing() {
       furnishing,
       petsAllowed,
       mealsProvided,
-      amenities: Object.keys(amenities).filter((k) => amenities[k]),
+      amenities: selectedAmenities,
       rooms: rooms.map((r) => ({
         name: r.name,
         price: Number(r.price || 0),
@@ -190,15 +188,6 @@ export default function CreateListing() {
     }
   }
 
-  const amenityList = [
-    { key: "wifi", label: "Wi-Fi" },
-    { key: "parking", label: "Parking" },
-    { key: "laundry", label: "Laundry" },
-    { key: "gas", label: "Gas" },
-    { key: "ac", label: "AC" },
-    { key: "hotWater", label: "Hot Water" },
-  ];
-
   return (
     <div className="min-h-[70vh] max-w-6xl mx-auto px-6 py-10">
       <div className="mb-6">
@@ -240,9 +229,9 @@ export default function CreateListing() {
                 <div className="text-sm font-medium text-slate-700">Property Type</div>
                 <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className="mt-2 w-full border border-slate-200 rounded-md px-3 py-3">
                   <option value="">Select Property Type</option>
-                  <option value="PG">PG</option>
-                  <option value="Apartment">Apartment</option>
-                  <option value="Hostel">Hostel</option>
+                  {options.propertyTypes.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
                 </select>
               </label>
 
@@ -250,9 +239,9 @@ export default function CreateListing() {
                 <div className="text-sm font-medium text-slate-700">Target Audience</div>
                 <select value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} className="mt-2 w-full border border-slate-200 rounded-md px-3 py-3">
                   <option value="">Select Target Audience</option>
-                  <option value="women">Women</option>
-                  <option value="men">Men</option>
-                  <option value="co-ed">Co-ed</option>
+                  {options.audiences.map((a) => (
+                    <option key={a.value} value={a.value}>{a.label}</option>
+                  ))}
                 </select>
               </label>
             </div>
@@ -267,10 +256,11 @@ export default function CreateListing() {
         {step === 1 && (
           <div className="space-y-4">
             <div className="text-sm text-slate-700 font-medium">Amenities</div>
+            {optionsLoading && <div className="text-sm text-slate-500">Loading amenities...</div>}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
-              {amenityList.map(a => (
-                <label key={a.key} className="flex items-center gap-3 bg-slate-50 rounded-md px-3 py-2 border border-transparent hover:border-slate-200 cursor-pointer">
-                  <input type="checkbox" checked={amenities[a.key]} onChange={() => toggleAmenity(a.key)} />
+              {options.amenities.map(a => (
+                <label key={a.value} className="flex items-center gap-3 bg-slate-50 rounded-md px-3 py-2 border border-transparent hover:border-slate-200 cursor-pointer">
+                  <input type="checkbox" checked={selectedAmenities.includes(a.value)} onChange={() => toggleAmenity(a.value)} />
                   <span className="text-sm text-slate-700">{a.label}</span>
                 </label>
               ))}
@@ -281,9 +271,9 @@ export default function CreateListing() {
                 <div className="text-sm font-medium text-slate-700">Furnishing</div>
                 <select value={furnishing} onChange={(e) => setFurnishing(e.target.value)} className="mt-2 w-full border border-slate-200 rounded-md px-3 py-3">
                   <option value="">Select Furnishing</option>
-                  <option value="furnished">Furnished</option>
-                  <option value="semi-furnished">Semi-furnished</option>
-                  <option value="unfurnished">Unfurnished</option>
+                  {options.furnishing.map((f) => (
+                    <option key={f.value} value={f.value}>{f.label}</option>
+                  ))}
                 </select>
               </label>
 
@@ -468,9 +458,9 @@ export default function CreateListing() {
               <label className="block">
                 <span className="sr-only">Listing status</span>
                 <select value={status} onChange={e=>setStatus(e.target.value)} className="w-full border border-slate-200 rounded px-3 py-2">
-                  <option value="available">Available</option>
-                  <option value="rented">Rented</option>
-                  <option value="coming_soon">Coming soon</option>
+                  {options.statuses.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
                 </select>
               </label>
             </div>

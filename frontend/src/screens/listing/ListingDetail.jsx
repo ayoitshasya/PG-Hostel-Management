@@ -6,6 +6,8 @@
   import EditPropertyModal from "../../components/EditPropertyModal";
   import ListingDetailSkeleton from "../../components/ListingDetailSkeleton";
   import { getPrimaryPhoto } from "../../utils/images";
+  import { amenityLabel } from "../../api/meta";
+  import useListingOptions from "../../hooks/useListingOptions";
 
   // Hero is roughly 2/3 of the max-w-7xl (1280px) container on large
   // screens (lg:col-span-2 of 3), full width below that.
@@ -19,6 +21,7 @@
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const [showEditPropertyModal, setShowEditPropertyModal] = useState(false);
     const [heroImgError, setHeroImgError] = useState(false);
+    const { options } = useListingOptions();
 
     useEffect(() => {
       loadProperty();
@@ -156,7 +159,7 @@
                           key={a}
                           className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs"
                         >
-                          {a}
+                          {amenityLabel(options, a)}
                         </span>
                       ))
                     ) : (
