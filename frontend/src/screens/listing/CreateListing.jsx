@@ -1,10 +1,8 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import API from "../../api/api";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
 
 export default function CreateListing() {
-  const { user } = useContext(AuthContext);
   const nav = useNavigate();
 
   // Stepper

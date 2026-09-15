@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import API from '../../api/api';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContextObject';
 import { Link } from 'react-router-dom';
 import ListingCard from '../../components/ListingCard';
 

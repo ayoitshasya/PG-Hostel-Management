@@ -1,7 +1,7 @@
   import React, { useEffect, useState, useContext } from "react";
   import { useParams } from "react-router-dom";
   import { fetchPropertyById } from "../../api/properties";
-  import { AuthContext } from "../../context/AuthContext";
+  import { AuthContext } from "../../context/AuthContextObject";
   import InquiryModal from "../../components/InquiryModal";
   import EditPropertyModal from "../../components/EditPropertyModal";
   
