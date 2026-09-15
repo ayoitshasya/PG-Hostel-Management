@@ -18,7 +18,7 @@ export default function Header() {
         <div className="flex items-center space-x-8">
           <Link
             to="/"
-            className="flex items-center gap-2 text-primary font-bold text-lg tracking-tight hover:opacity-90"
+            className="flex items-center gap-2 text-primary-dark font-bold text-lg tracking-tight hover:opacity-90"
           >
             <svg
               width="22"
@@ -26,6 +26,7 @@ export default function Header() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
             >
               <path
                 d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14 10.5 9.5 6 8l4.5-1.5L12 2z"
@@ -39,13 +40,13 @@ export default function Header() {
           <nav className="hidden md:flex items-center space-x-6 text-[15px] text-gray-600">
             <Link
               to="/"
-              className="hover:text-primary transition-colors duration-200"
+              className="hover:text-primary-dark transition-colors duration-200"
             >
               Home
             </Link>
             <Link
               to="/create-listing"
-              className="hover:text-primary transition-colors duration-200"
+              className="hover:text-primary-dark transition-colors duration-200"
             >
               List Your PG
             </Link>
@@ -63,14 +64,14 @@ export default function Header() {
               {user.role === "renter" ? (
                 <Link
                   to="/renter-dashboard"
-                  className="text-gray-700 hover:text-primary transition-colors duration-200"
+                  className="text-gray-700 hover:text-primary-dark transition-colors duration-200"
                 >
                   Dashboard
                 </Link>
               ) : (
                 <Link
                   to="/tenant-dashboard"
-                  className="text-gray-700 hover:text-primary transition-colors duration-200"
+                  className="text-gray-700 hover:text-primary-dark transition-colors duration-200"
                 >
                   My Requests
                 </Link>
@@ -87,14 +88,15 @@ export default function Header() {
             <>
               <Link
                 to="/login"
-                className="text-gray-700 hover:text-primary transition-colors duration-200"
+                className="text-gray-700 hover:text-primary-dark transition-colors duration-200"
               >
                 Login
               </Link>
-              <Link to="/signup" className="inline-block">
-                <button className="ml-2 px-4 py-1.5 rounded-md bg-primary text-gray-700 text-sm font-medium hover:brightness-95 transition-all duration-200 shadow-sm">
-                  Sign Up
-                </button>
+              <Link
+                to="/signup"
+                className="ml-2 px-4 py-1.5 rounded-md bg-primary-dark text-white text-sm font-medium hover:brightness-110 transition-all duration-200 shadow-sm inline-block"
+              >
+                Sign Up
               </Link>
             </>
           )}

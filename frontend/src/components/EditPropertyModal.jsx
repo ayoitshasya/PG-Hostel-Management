@@ -47,13 +47,14 @@ export default function EditPropertyModal({ isOpen, onClose, property, onSuccess
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Property">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="text-sm text-red-600">{error}</div>}
+        {error && <div className="text-sm text-red-600" role="alert">{error}</div>}
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="edit-title" className="block text-sm font-medium text-slate-700 mb-2">
             Property Name
           </label>
           <input
+            id="edit-title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -62,10 +63,11 @@ export default function EditPropertyModal({ isOpen, onClose, property, onSuccess
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="edit-description" className="block text-sm font-medium text-slate-700 mb-2">
             Description
           </label>
           <textarea
+            id="edit-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows="4"
@@ -75,10 +77,11 @@ export default function EditPropertyModal({ isOpen, onClose, property, onSuccess
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label htmlFor="edit-price" className="block text-sm font-medium text-slate-700 mb-2">
               Price (per month)
             </label>
             <input
+              id="edit-price"
               type="number"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
@@ -87,10 +90,11 @@ export default function EditPropertyModal({ isOpen, onClose, property, onSuccess
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label htmlFor="edit-status" className="block text-sm font-medium text-slate-700 mb-2">
               Status
             </label>
             <select
+              id="edit-status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-sky-200 focus:outline-none"
@@ -113,7 +117,7 @@ export default function EditPropertyModal({ isOpen, onClose, property, onSuccess
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 disabled:opacity-50"
+            className="flex-1 px-4 py-2 bg-primary-dark text-white rounded-lg hover:bg-primary disabled:opacity-50"
           >
             {loading ? "Saving..." : "Save Changes"}
           </button>

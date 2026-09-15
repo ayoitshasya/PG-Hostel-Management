@@ -207,24 +207,25 @@ export default function CreateListing() {
       </div>
 
       {/* Stepper */}
-      <div className="flex items-center gap-6 border-b border-slate-100 pb-4 mb-6">
+      <ol className="flex items-center gap-6 border-b border-slate-100 pb-4 mb-6" aria-label="Form steps">
         {steps.map((s, i) => (
-          <div key={s} className="flex items-center gap-3">
+          <li key={s} className="flex items-center gap-3" aria-current={i === step ? "step" : undefined}>
             <div
+              aria-hidden="true"
               className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold
-                ${i === step ? "bg-sky-500 text-white" : i < step ? "bg-slate-200 text-slate-700" : "bg-white text-slate-400 border border-slate-200"}`}
+                ${i === step ? "bg-primary-dark text-white" : i < step ? "bg-slate-200 text-slate-700" : "bg-white text-slate-500 border border-slate-200"}`}
             >
               {i + 1}
             </div>
-            <div className={`text-sm ${i === step ? "text-sky-600 font-medium" : "text-slate-600"}`}>{s}</div>
-          </div>
+            <div className={`text-sm ${i === step ? "text-primary-dark font-medium" : "text-slate-600"}`}>{s}</div>
+          </li>
         ))}
-      </div>
+      </ol>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6">
         {/* Error / Success */}
-        {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
-        {successMsg && <div className="mb-4 text-sm text-green-600">{successMsg}</div>}
+        {error && <div className="mb-4 text-sm text-red-600" role="alert">{error}</div>}
+        {successMsg && <div className="mb-4 text-sm text-green-700" role="status">{successMsg}</div>}
 
         {/* Step content */}
         {step === 0 && (
@@ -308,40 +309,59 @@ export default function CreateListing() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium text-slate-700">Rooms & Pricing</div>
-              <button type="button" onClick={addRoom} className="text-sm bg-sky-500 text-white px-3 py-1 rounded">Add Room</button>
+              <button type="button" onClick={addRoom} className="text-sm bg-primary-dark text-white px-3 py-1 rounded">Add Room</button>
             </div>
 
             <div className="space-y-4">
               {rooms.map((r, i) => (
-                <div key={i} className="border border-slate-100 p-4 rounded-md">
-                  <div className="flex items-center justify-between">
-                    <div className="font-medium">Room {i + 1}</div>
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => removeRoom(i)} className="text-sm text-red-500">Remove</button>
-                    </div>
+                <fieldset key={i} className="border border-slate-100 p-4 rounded-md">
+                  <legend className="flex items-center justify-between w-full px-0">
+                    <span className="font-medium">Room {i + 1}</span>
+                  </legend>
+                  <div className="flex justify-end -mt-8 mb-2">
+                    <button type="button" onClick={() => removeRoom(i)} className="text-sm text-red-600">
+                      Remove room {i + 1}
+                    </button>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                    <input value={r.name} onChange={(e) => updateRoom(i, { name: e.target.value })} className="border border-slate-200 rounded px-3 py-2" placeholder="Room name (A1)" />
-                    <input value={r.price} onChange={(e) => updateRoom(i, { price: e.target.value })} className="border border-slate-200 rounded px-3 py-2" placeholder="Price per month" />
-                    <input value={r.occupancy} onChange={(e) => updateRoom(i, { occupancy: e.target.value })} type="number" className="border border-slate-200 rounded px-3 py-2" placeholder="Occupancy" />
+                    <label className="block">
+                      <span className="sr-only">Room {i + 1} name</span>
+                      <input value={r.name} onChange={(e) => updateRoom(i, { name: e.target.value })} className="w-full border border-slate-200 rounded px-3 py-2" placeholder="Room name (A1)" />
+                    </label>
+                    <label className="block">
+                      <span className="sr-only">Room {i + 1} price per month</span>
+                      <input value={r.price} onChange={(e) => updateRoom(i, { price: e.target.value })} className="w-full border border-slate-200 rounded px-3 py-2" placeholder="Price per month" />
+                    </label>
+                    <label className="block">
+                      <span className="sr-only">Room {i + 1} occupancy</span>
+                      <input value={r.occupancy} onChange={(e) => updateRoom(i, { occupancy: e.target.value })} type="number" className="w-full border border-slate-200 rounded px-3 py-2" placeholder="Occupancy" />
+                    </label>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                    <input value={r.availableFrom} onChange={(e) => updateRoom(i, { availableFrom: e.target.value })} type="date" className="border border-slate-200 rounded px-3 py-2" />
-                    <select value={r.status} onChange={(e) => updateRoom(i, { status: e.target.value })} className="border border-slate-200 rounded px-3 py-2">
-                      <option value="available">Available</option>
-                      <option value="booked">Booked</option>
-                      <option value="unavailable">Unavailable</option>
-                    </select>
+                    <label className="block">
+                      <span className="sr-only">Room {i + 1} available from</span>
+                      <input value={r.availableFrom} onChange={(e) => updateRoom(i, { availableFrom: e.target.value })} type="date" className="w-full border border-slate-200 rounded px-3 py-2" />
+                    </label>
+                    <label className="block">
+                      <span className="sr-only">Room {i + 1} status</span>
+                      <select value={r.status} onChange={(e) => updateRoom(i, { status: e.target.value })} className="w-full border border-slate-200 rounded px-3 py-2">
+                        <option value="available">Available</option>
+                        <option value="booked">Booked</option>
+                        <option value="unavailable">Unavailable</option>
+                      </select>
+                    </label>
                   </div>
-                </div>
+                </fieldset>
               ))}
             </div>
 
             <div className="mt-4">
-              <label className="text-sm font-medium text-slate-700">Default Price (optional)</label>
-              <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Default price e.g. 6000" className="mt-2 w-48 border border-slate-200 rounded px-3 py-2" />
+              <label className="block">
+                <span className="text-sm font-medium text-slate-700">Default Price (optional)</span>
+                <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Default price e.g. 6000" className="mt-2 w-48 border border-slate-200 rounded px-3 py-2" />
+              </label>
             </div>
           </div>
         )}
@@ -349,7 +369,7 @@ export default function CreateListing() {
         {step === 3 && (
           <div className="space-y-4">
             <div>
-              <div className="text-sm font-medium text-slate-700">Add Photos (URLs)</div>
+              <label htmlFor="photo-url-input" className="text-sm font-medium text-slate-700">Add Photos (URLs)</label>
               <div className="flex gap-2 mt-2">
                 <input placeholder="https://..." className="flex-1 border border-slate-200 rounded px-3 py-2" id="photo-url-input" />
                 <button type="button" onClick={()=>{
@@ -371,8 +391,9 @@ export default function CreateListing() {
             </div>
 
             <div>
-              <div className="text-sm font-medium text-slate-700">Upload photos</div>
+              <label htmlFor="photo-file-input" className="text-sm font-medium text-slate-700">Upload photos</label>
               <input
+                id="photo-file-input"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 multiple
@@ -385,7 +406,7 @@ export default function CreateListing() {
                 <div className="mt-3" role="status" aria-live="polite">
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-sky-500 transition-all"
+                      className="h-full bg-primary-dark transition-all"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
@@ -415,7 +436,7 @@ export default function CreateListing() {
                   );
                 })}
               </div>
-              <div className="text-xs text-slate-400 mt-2">
+              <div className="text-xs text-slate-500 mt-2">
                 JPEG, PNG, or WebP, up to {MAX_UPLOAD_MB}MB each. Resized and optimized automatically.
               </div>
             </div>
@@ -436,22 +457,33 @@ export default function CreateListing() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input value={lat} onChange={e=>setLat(e.target.value)} placeholder="Latitude" className="border border-slate-200 rounded px-3 py-2" />
-              <input value={lng} onChange={e=>setLng(e.target.value)} placeholder="Longitude" className="border border-slate-200 rounded px-3 py-2" />
-              <select value={status} onChange={e=>setStatus(e.target.value)} className="border border-slate-200 rounded px-3 py-2">
-                <option value="available">Available</option>
-                <option value="rented">Rented</option>
-                <option value="coming_soon">Coming soon</option>
-              </select>
+              <label className="block">
+                <span className="sr-only">Latitude</span>
+                <input value={lat} onChange={e=>setLat(e.target.value)} placeholder="Latitude" className="w-full border border-slate-200 rounded px-3 py-2" />
+              </label>
+              <label className="block">
+                <span className="sr-only">Longitude</span>
+                <input value={lng} onChange={e=>setLng(e.target.value)} placeholder="Longitude" className="w-full border border-slate-200 rounded px-3 py-2" />
+              </label>
+              <label className="block">
+                <span className="sr-only">Listing status</span>
+                <select value={status} onChange={e=>setStatus(e.target.value)} className="w-full border border-slate-200 rounded px-3 py-2">
+                  <option value="available">Available</option>
+                  <option value="rented">Rented</option>
+                  <option value="coming_soon">Coming soon</option>
+                </select>
+              </label>
             </div>
 
             <div className="flex items-center gap-4 mt-2">
-              <div className="text-sm font-medium">Currency</div>
-              <select value={currency} onChange={(e)=>setCurrency(e.target.value)} className="border border-slate-200 rounded px-3 py-2">
-                <option value="INR">INR</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-              </select>
+              <label className="flex items-center gap-4">
+                <span className="text-sm font-medium">Currency</span>
+                <select value={currency} onChange={(e)=>setCurrency(e.target.value)} className="border border-slate-200 rounded px-3 py-2">
+                  <option value="INR">INR</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </label>
             </div>
           </div>
         )}
@@ -464,9 +496,9 @@ export default function CreateListing() {
 
           <div className="flex items-center gap-3">
             {step < steps.length - 1 ? (
-              <button type="button" onClick={handleNext} className="px-5 py-2 bg-sky-500 text-white rounded-md">Next</button>
+              <button type="button" onClick={handleNext} className="px-5 py-2 bg-primary-dark text-white rounded-md">Next</button>
             ) : (
-              <button type="submit" disabled={loading} className="px-5 py-2 bg-sky-600 text-white rounded-md">
+              <button type="submit" disabled={loading} className="px-5 py-2 bg-primary-dark text-white rounded-md">
                 {loading ? "Creating..." : "Create listing"}
               </button>
             )}

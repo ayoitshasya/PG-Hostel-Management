@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { getPrimaryPhoto } from "../utils/images";
 
 // Card is up to 1/3 of the viewport width on large screens (grid-cols-3),
@@ -12,23 +12,24 @@ const CARD_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw";
 // fold - so it loads eagerly and with high fetch priority. Every other
 // card stays lazy so the browser doesn't compete for bandwidth loading
 // images the user hasn't scrolled to yet.
-export default function ListingCard({ property, priority = false }) {
-  const nav = useNavigate();
+//
+// headingLevel: which heading tag wraps the card title, since this card
+// gets used directly under a page's h1 in some screens (RenterDashboard)
+// and under an h2 section heading in others (Find's "Recommended"/
+// "Results") - callers pass whichever keeps the page's heading order
+// unbroken (no skipped levels) for their context.
+export default function ListingCard({ property, priority = false, headingLevel = 3 }) {
+  const HeadingTag = `h${headingLevel}`;
   const [imgError, setImgError] = useState(false);
   const photo = getPrimaryPhoto(property);
   const price = property.price ?? property.rooms?.[0]?.price ?? null;
   const priceLabel = price ? `${property.currency ?? "INR"} ${price}` : "Price N/A";
   const subtitle = property.description || property.propertyType || "";
 
-  function handleClick() {
-    // Navigate to detail page: /listing/:id
-    nav(`/listing/${property._id}`);
-  }
-
   return (
-    <div
-      onClick={handleClick}
-      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all overflow-hidden cursor-pointer"
+    <Link
+      to={`/listing/${property._id}`}
+      className="block bg-white rounded-lg shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-dark transition-all overflow-hidden"
     >
       <div className="w-full h-44 md:h-40 lg:h-44 bg-gray-100">
         {photo && !imgError ? (
@@ -46,16 +47,16 @@ export default function ListingCard({ property, priority = false }) {
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <div className="w-full h-full flex items-center justify-center text-gray-500">
             No Image
           </div>
         )}
       </div>
 
       <div className="p-4">
-        <h3 className="font-semibold text-slate-900 text-base line-clamp-2">
+        <HeadingTag className="font-semibold text-slate-900 text-base line-clamp-2">
           {property.title}
-        </h3>
+        </HeadingTag>
 
         <p className="text-sm text-slate-500 mt-1 line-clamp-2">{subtitle}</p>
 
@@ -85,6 +86,6 @@ export default function ListingCard({ property, priority = false }) {
           ))}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

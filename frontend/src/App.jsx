@@ -36,22 +36,30 @@ function RouteFallback() {
 export default function App(){
   return (
     <BrowserRouter>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:text-slate-900 focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
       <Header />
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
-          <Route path="/" element={<Home/>} />
-          <Route path="/login" element={<Login/>} />
-          <Route path="/signup" element={<Signup/>} />
-          <Route path="/find" element={<Find/>} />
+      <main id="main-content">
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<Home/>} />
+            <Route path="/login" element={<Login/>} />
+            <Route path="/signup" element={<Signup/>} />
+            <Route path="/find" element={<Find/>} />
 
-          <Route path="/listing/:id" element={<ListingDetail/>} />
-          <Route path="/create-listing" element={<ProtectedRoute allowedRoles={["renter"]} ><CreateListing/></ProtectedRoute>} />
-          <Route path="/renter-dashboard" element={<ProtectedRoute allowedRoles={["renter"]} ><RenterDashboard/></ProtectedRoute>} />
-          <Route path="/tenant-dashboard" element={<ProtectedRoute allowedRoles={["tenant"]} ><TenantDashboard/></ProtectedRoute>} />
+            <Route path="/listing/:id" element={<ListingDetail/>} />
+            <Route path="/create-listing" element={<ProtectedRoute allowedRoles={["renter"]} ><CreateListing/></ProtectedRoute>} />
+            <Route path="/renter-dashboard" element={<ProtectedRoute allowedRoles={["renter"]} ><RenterDashboard/></ProtectedRoute>} />
+            <Route path="/tenant-dashboard" element={<ProtectedRoute allowedRoles={["tenant"]} ><TenantDashboard/></ProtectedRoute>} />
 
-          <Route path="*" element={<NotFound/>} />
-        </Routes>
-      </Suspense>
+            <Route path="*" element={<NotFound/>} />
+          </Routes>
+        </Suspense>
+      </main>
       <Footer />
     </BrowserRouter>
   );

@@ -73,7 +73,7 @@
                   />
                 </div>
               ) : (
-                <div className="w-full aspect-[8/5] bg-gray-100 flex items-center justify-center text-gray-400">
+                <div className="w-full aspect-[8/5] bg-gray-100 flex items-center justify-center text-gray-500">
                   No Image Available
                 </div>
               )}
@@ -101,40 +101,40 @@
 
                 <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
                   <div>
-                    <h4 className="text-gray-500 font-medium mb-1">Price</h4>
+                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Price</h2>
                     <p className="text-lg font-semibold text-gray-900">
                       {prop.price ? `₹${prop.price} / month` : "Contact for price"}
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="text-gray-500 font-medium mb-1">Furnishing</h4>
+                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Furnishing</h2>
                     <p className="capitalize text-gray-700">
                       {prop.furnishing || "—"}
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="text-gray-500 font-medium mb-1">Meals</h4>
+                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Meals</h2>
                     <p className="capitalize text-gray-700">
                       {prop.mealsProvided ? "Included" : "Not included"}
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="text-gray-500 font-medium mb-1">Pets</h4>
+                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Pets</h2>
                     <p className="capitalize text-gray-700">
                       {prop.petsAllowed ? "Allowed" : "Not allowed"}
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="text-gray-500 font-medium mb-1">Status</h4>
+                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Status</h2>
                     <p
                       className={`capitalize font-medium ${
                         prop.status === "available"
-                          ? "text-green-600"
-                          : "text-red-500"
+                          ? "text-green-700"
+                          : "text-red-600"
                       }`}
                     >
                       {prop.status || "—"}
@@ -142,13 +142,13 @@
                   </div>
 
                   <div>
-                    <h4 className="text-gray-500 font-medium mb-1">Rooms</h4>
+                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Rooms</h2>
                     <p className="text-gray-700">{prop.totalRooms || "—"}</p>
                   </div>
                 </div>
 
                 <div className="mt-8">
-                  <h4 className="text-gray-700 font-semibold mb-3">Amenities</h4>
+                  <h2 className="text-gray-700 font-semibold mb-3">Amenities</h2>
                   <div className="flex flex-wrap gap-2">
                     {prop.amenities && prop.amenities.length > 0 ? (
                       prop.amenities.map((a) => (
@@ -168,7 +168,7 @@
                 </div>
 
                 <div className="mt-8">
-                  <h4 className="text-gray-700 font-semibold mb-2">Location</h4>
+                  <h2 className="text-gray-700 font-semibold mb-2">Location</h2>
                   <p className="text-gray-600 text-sm mb-3">
                     {prop.location?.address || "Address not available"}
                   </p>
@@ -177,7 +177,7 @@
                       href={prop.location.googleMapsUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-block px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-sm transition"
+                      className="inline-block px-4 py-2 rounded-lg bg-primary-dark hover:bg-primary text-white text-sm transition"
                     >
                       View on Google Maps
                     </a>
@@ -195,15 +195,15 @@
                   && (
                     <button
                     onClick={() => setShowEditPropertyModal(true)}
-                    className="w-full py-3 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-semibold transition"
+                    className="w-full py-3 rounded-lg bg-primary-dark hover:bg-primary text-white font-semibold transition"
                   >
                     Edit Property
                   </button>
                   )
               }
 
-              <div className="bg-gradient-to-r from-sky-500 to-sky-600 text-white rounded-xl p-4 text-center my-6">
-                <h3 className="text-lg font-semibold">Contact Renter</h3>
+              <div className="bg-gradient-to-r from-primary-dark to-sky-700 text-white rounded-xl p-4 text-center my-6">
+                <h2 className="text-lg font-semibold">Contact Renter</h2>
                 <p className="text-sm mt-1 opacity-90">
                   Interested? Send an inquiry!
                 </p>
@@ -223,7 +223,7 @@
               {canInquire ? (
                 <button
                   onClick={() => setShowInquiryModal(true)}
-                  className="w-full py-3 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-semibold transition"
+                  className="w-full py-3 rounded-lg bg-primary-dark hover:bg-primary text-white font-semibold transition"
                 >
                   Send Inquiry
                 </button>
@@ -232,7 +232,7 @@
                   {user ? (
                     "Only tenants can send inquiries"
                   ) : (
-                    <a href="/login" className="text-sky-500 hover:underline">
+                    <a href="/login" className="text-primary-dark hover:underline">
                       Login to send inquiry
                     </a>
                   )}

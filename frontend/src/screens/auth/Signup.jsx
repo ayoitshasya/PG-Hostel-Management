@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContextObject";
 
 export default function RoomieSignup() {
@@ -53,7 +53,7 @@ export default function RoomieSignup() {
 
   return (
     <div className="min-h-screen flex items-start justify-center py-28 bg-[#f5f7f8]">
-      <main className="w-[760px] max-w-[92%] text-center">
+      <div className="w-[760px] max-w-[92%] text-center">
         <div className="flex items-center justify-center">
           <div className="w-12 h-12 rounded-full flex items-center justify-center">
             <svg
@@ -62,6 +62,7 @@ export default function RoomieSignup() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
             >
               <path
                 d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14 10.5 9.5 6 8l4.5-1.5L12 2z"
@@ -75,7 +76,7 @@ export default function RoomieSignup() {
         <h1 className="mt-6 text-4xl font-extrabold text-slate-900">
           Create your account
         </h1>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-slate-600">
           Your perfect stay is just a click away
         </p>
 
@@ -83,10 +84,12 @@ export default function RoomieSignup() {
           <div className="w-[560px] max-w-full rounded-xl p-1 border border-white shadow-inner bg-white/60 segmented">
             <div className="flex rounded-lg overflow-hidden">
               <button
+                type="button"
                 onClick={() => setRole("renter")}
+                aria-pressed={role === "renter"}
                 className={`flex-1 py-3 px-6 text-lg font-medium border-r border-white transition-all ${
                   role === "renter"
-                    ? "text-white bg-[#13a3e9]"
+                    ? "text-white bg-primary-dark"
                     : "text-slate-600 bg-transparent"
                 }`}
               >
@@ -94,10 +97,12 @@ export default function RoomieSignup() {
               </button>
 
               <button
+                type="button"
                 onClick={() => setRole("tenant")}
+                aria-pressed={role === "tenant"}
                 className={`flex-1 py-3 px-6 text-lg font-medium transition-all ${
                   role === "tenant"
-                    ? "text-white bg-[#13a3e9]"
+                    ? "text-white bg-primary-dark"
                     : "text-slate-600 bg-transparent"
                 }`}
               >
@@ -156,22 +161,28 @@ export default function RoomieSignup() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <input
-                id="phone"
-                type="tel"
-                placeholder="Phone (optional)"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full rounded-lg px-4 py-3 placeholder:text-slate-400 text-slate-700 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 glass-input"
-              />
-              <input
-                id="avatar"
-                type="url"
-                placeholder="Avatar URL (optional)"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                className="w-full rounded-lg px-4 py-3 placeholder:text-slate-400 text-slate-700 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 glass-input"
-              />
+              <div>
+                <label className="sr-only" htmlFor="phone">Phone</label>
+                <input
+                  id="phone"
+                  type="tel"
+                  placeholder="Phone (optional)"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full rounded-lg px-4 py-3 placeholder:text-slate-400 text-slate-700 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 glass-input"
+                />
+              </div>
+              <div>
+                <label className="sr-only" htmlFor="avatar">Avatar URL</label>
+                <input
+                  id="avatar"
+                  type="url"
+                  placeholder="Avatar URL (optional)"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  className="w-full rounded-lg px-4 py-3 placeholder:text-slate-400 text-slate-700 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-200 glass-input"
+                />
+              </div>
             </div>
 
             <div>
@@ -180,27 +191,27 @@ export default function RoomieSignup() {
                 disabled={loading}
                 className="w-full py-4 rounded-lg font-semibold text-white text-lg"
                 style={{
-                  background: "linear-gradient(180deg,#13a3e9,#0d94d6)",
-                  boxShadow: "0 8px 20px rgba(19,163,233,0.18)",
+                  background: "linear-gradient(180deg,#086492,#064d70)",
+                  boxShadow: "0 8px 20px rgba(10,123,181,0.25)",
                 }}
               >
                 {loading ? "Creating account..." : "Create Account"}
               </button>
             </div>
 
-            <p className="text-center text-sm text-sky-600 mt-3">
+            <p className="text-center text-sm text-primary-dark mt-3">
               Already have an account?{" "}
-              <a href="/login" className="font-medium underline">
+              <Link to="/login" className="font-medium underline">
                 Login
-              </a>
+              </Link>
             </p>
           </form>
         </section>
-      </main>
+      </div>
 
       <style jsx>{`
         :root {
-          --brand: #13a3e9;
+          --brand: #086492;
         }
         .segmented {
           box-shadow: 0 6px 18px rgba(2, 6, 23, 0.04);

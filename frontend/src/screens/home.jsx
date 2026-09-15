@@ -4,11 +4,11 @@ import { Link } from "react-router-dom";
 export default function Home() {
   return (
     <div className="min-h-[80vh] flex flex-col bg-white">
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
         <div className="relative w-full max-w-6xl rounded-2xl overflow-hidden shadow-xl">
           <img
             src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.1.0&auto=format&fit=crop&w=1600&q=80"
-            alt="Room"
+            alt=""
             className="w-full h-[420px] md:h-[500px] object-cover"
             width="1600"
             height="500"
@@ -28,7 +28,7 @@ export default function Home() {
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 to="/find"
-                className="px-8 py-3 bg-sky-500 text-white rounded-lg font-semibold hover:bg-sky-600 transition"
+                className="px-8 py-3 bg-primary-dark text-white rounded-lg font-semibold hover:bg-primary transition"
               >
                 Find a PG
               </Link>
@@ -41,7 +41,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

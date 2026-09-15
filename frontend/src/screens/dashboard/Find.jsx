@@ -109,7 +109,7 @@ export default function Find() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
-      <h2 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h2>
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h1>
       <p className="text-slate-500 mb-8">Find your perfect accommodation</p>
 
       <div className="flex gap-6 border-b border-slate-200 mb-6">
@@ -117,7 +117,7 @@ export default function Find() {
           onClick={() => setActiveTab("search")}
           className={`pb-3 px-2 font-medium transition-colors ${
             activeTab === "search"
-              ? "text-sky-500 border-b-2 border-sky-500"
+              ? "text-primary-dark border-b-2 border-primary-dark"
               : "text-slate-500 hover:text-slate-700"
           }`}
         >
@@ -127,58 +127,73 @@ export default function Find() {
 
       <form onSubmit={handleSearchSubmit} className="mb-8">
         <div className="flex gap-3 items-center mb-4">
-          <input
-            value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Search for PG or Hostel"
-            className="flex-1 rounded-lg border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-200"
-          />
+          <label className="flex-1">
+            <span className="sr-only">Search for PG or Hostel</span>
+            <input
+              value={query}
+              onChange={(e) => onQueryChange(e.target.value)}
+              placeholder="Search for PG or Hostel"
+              className="w-full rounded-lg border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-200"
+            />
+          </label>
           <button
             type="submit"
-            className="px-6 py-3 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-medium"
+            className="px-6 py-3 rounded-lg bg-primary-dark hover:bg-primary text-white font-medium"
           >
             Search
           </button>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <select
-            value={propertyType}
-            onChange={(e) => setPropertyType(e.target.value)}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
-          >
-            <option value="">All Types</option>
-            <option value="PG">PG</option>
-            <option value="Apartment">Apartment</option>
-            <option value="Hostel">Hostel</option>
-          </select>
+          <label className="block">
+            <span className="sr-only">Property type</span>
+            <select
+              value={propertyType}
+              onChange={(e) => setPropertyType(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
+            >
+              <option value="">All Types</option>
+              <option value="PG">PG</option>
+              <option value="Apartment">Apartment</option>
+              <option value="Hostel">Hostel</option>
+            </select>
+          </label>
 
-          <select
-            value={targetAudience}
-            onChange={(e) => setTargetAudience(e.target.value)}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
-          >
-            <option value="">All Audiences</option>
-            <option value="women">Women</option>
-            <option value="men">Men</option>
-            <option value="co-ed">Co-ed</option>
-          </select>
+          <label className="block">
+            <span className="sr-only">Target audience</span>
+            <select
+              value={targetAudience}
+              onChange={(e) => setTargetAudience(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
+            >
+              <option value="">All Audiences</option>
+              <option value="women">Women</option>
+              <option value="men">Men</option>
+              <option value="co-ed">Co-ed</option>
+            </select>
+          </label>
 
-          <input
-            type="number"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            placeholder="Min Price"
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
-          />
+          <label className="block">
+            <span className="sr-only">Minimum price</span>
+            <input
+              type="number"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              placeholder="Min Price"
+              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
+            />
+          </label>
 
-          <input
-            type="number"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            placeholder="Max Price"
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
-          />
+          <label className="block">
+            <span className="sr-only">Maximum price</span>
+            <input
+              type="number"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder="Max Price"
+              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
+            />
+          </label>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -187,9 +202,10 @@ export default function Find() {
               key={amenity}
               type="button"
               onClick={() => toggleAmenity(amenity)}
+              aria-pressed={selectedAmenities.includes(amenity)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 selectedAmenities.includes(amenity)
-                  ? "bg-sky-500 text-white"
+                  ? "bg-primary-dark text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -202,7 +218,7 @@ export default function Find() {
       {activeTab === "search" && (
         <>
           <section className="mb-10">
-            <h3 className="text-lg font-semibold mb-4">Recommended for you</h3>
+            <h2 className="text-lg font-semibold mb-4">Recommended for you</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {loadingRecommended
                 ? [1, 2, 3].map((n) => <SkeletonCard key={n} />)
@@ -217,8 +233,8 @@ export default function Find() {
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold mb-4">Results</h3>
-            {error && <div className="mb-4 text-red-600">{error}</div>}
+            <h2 className="text-lg font-semibold mb-4">Results</h2>
+            {error && <div className="mb-4 text-red-600" role="alert">{error}</div>}
             {loadingResults ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: RESULTS_PAGE_SIZE }, (_, i) => (
