@@ -593,3 +593,173 @@ image, unrelated to the property image pipeline). TBT has been the
 noisiest metric measured throughout this project - baseline alone
 ranged 10-128ms across 3 runs on this exact page - and 138ms sits
 inside that same band.
+
+---
+
+## Phase 4 — Accessibility (2026-09-15)
+
+### What was done
+
+1. **`eslint-plugin-jsx-a11y`** added to `eslint.config.js` (flat config,
+   `recommended` ruleset). Found 11 real errors on the first run: 6
+   unlabeled form controls, 2 click handlers on non-interactive `<div>`s,
+   1 invalid `href="#"`, 2 more once the sweep widened. All fixed - see
+   commits for the full list. `npm run lint` was 0 errors both before and
+   after Phase 4 started (this ruleset is what surfaced the new ones).
+2. **Landmarks**: `App.jsx` now wraps all routed content in a single
+   `<main id="main-content">`, with a "Skip to main content" link before
+   `<Header>` (visually hidden until focused). Three screens
+   (`home.jsx`, `Login.jsx`, `Signup.jsx`) had their own nested `<main>`
+   left over from before this wrapper existed - found via a full-app
+   grep for `<main`, not assumed; changed to `<div>` since a page must
+   have exactly one `<main>`. `Header`/`Footer`/nav were already correct.
+3. **Heading order**: audited every screen (`grep -rn "<h[1-6]"`) and
+   fixed every page to have exactly one `<h1>` with no skipped levels
+   below it - `Find`, `RenterDashboard`, and `TenantDashboard` had no
+   `<h1>` at all (started at `<h2>`); `ListingDetail` jumped straight
+   from `<h1>` to `<h4>` for its info-grid labels. `ListingCard`'s title
+   heading level is now a `headingLevel` prop (2 or 3) since the same
+   component sits directly under an `<h1>` in `RenterDashboard` but under
+   an `<h2>` section in `Find` - one fixed level would have broken one of
+   the two.
+4. **Labels**: every input in `Login`, `Signup`, `CreateListing`,
+   `InquiryModal`, `EditPropertyModal`, and `Find`'s filter bar now has a
+   real associated `<label>` (visually hidden via `sr-only` where a
+   visible label would duplicate a placeholder or clutter a compact
+   filter bar). `CreateListing`'s repeated room fields are also wrapped
+   in `<fieldset>`/`<legend>` per room - without that, a screen reader
+   announces "Price" identically for every room with no way to tell
+   which one. Validation/status messages got `role="alert"` (errors) or
+   `role="status"` (success/progress) so they're announced when they
+   appear, not just visible.
+5. **`Modal.jsx`** rewritten: `role="dialog"`, `aria-modal="true"`,
+   `aria-labelledby` pointing at the title, focus moves to the first
+   focusable element on open, Tab/Shift+Tab is trapped inside the dialog,
+   Escape closes it, and focus returns to whatever triggered the modal
+   when it closes (tracked via `document.activeElement` at open time).
+   Used by both `InquiryModal` and `EditPropertyModal`.
+6. **Keyboard/interactive fixes**: `ListingCard` and the inquiry-card
+   thumbnail in `TenantDashboard` were `<div onClick>` (mouse-only,
+   unreachable by keyboard, and what jsx-a11y flagged) - both are now a
+   real `<Link>`, which gets keyboard operability, screen-reader link
+   semantics, and middle-click/cmd-click "open in new tab" for free
+   instead of reimplementing any of it. Role-toggle buttons (Renter/
+   Tenant, amenity filters) got `aria-pressed` so their selected state is
+   announced, not just shown with a color change. A site-wide
+   `:focus-visible` outline was added to `index.css` as a fallback so
+   nothing relies on remembering to style every interactive element.
+7. **Contrast** - see below, this is the big one.
+8. **Alt text**: `alt={property.title}` was already in place on listing
+   photos (meaningful, not "image123"); fixed the home page hero to
+   `alt=""` (decorative - the overlaid heading already states the same
+   thing, so a screen reader announcing "Room" adds nothing) and three
+   decorative logo SVGs (Header, Login, Signup) to `aria-hidden="true"`.
+
+### Contrast: a real, measured failure - and a build bug that hid the fix
+
+You flagged `#13a3e9` as suspect. Measured it properly instead of
+eyeballing:
+
+```
+#13a3e9 vs white: 2.82:1
+```
+
+That fails WCAG AA even for large/bold text (needs 3:1) - there's no
+text size at which this hue works on a white background, so "keep the
+brand color for large elements where it passes" doesn't have a case to
+apply to: nothing passes. Checking further, Tailwind's built-in
+`sky-500` (used throughout the app alongside the custom color) has the
+identical problem: `#0ea5e9` vs white = 2.77:1. This wasn't one color to
+patch - it was most of the app's buttons and links.
+
+Fix: added `primary-dark` (darkened until it passes with real margin,
+not just barely) and swapped every interactive text/button-fill use of
+`primary`/`sky-500`/`sky-600` to it across the whole frontend. Kept the
+original bright `primary` for the one legitimate non-text use (the
+decorative, now-`aria-hidden` logo mark).
+
+**While re-measuring to confirm the fix, found something bigger**: the
+new color barely changed anything in the compiled CSS. Checked the
+build output directly (not just visually) - `grep`-ing the compiled CSS
+for `primary` or the hex values returned **zero matches**, for either
+the old or new color. Root cause: this project's Tailwind v4 setup
+(`@tailwindcss/vite`) does not read `tailwind.config.js` at all unless a
+CSS file explicitly does `@config "..."` - this one never did. That
+means `bg-primary`/`text-primary` have compiled to **nothing** since
+Phase 0, not just during this phase - the brand color in `tailwind.config.js`
+was dead configuration from the very first commit, silently doing
+nothing, the whole project. Fixed properly by moving the color
+definitions into `src/index.css` via Tailwind v4's native `@theme`
+block, and deleted the now-fully-dead `tailwind.config.js`. Confirmed
+via the same direct-string-search method (not visual inspection) that
+`primary`/`primary-dark`/the hex values are now actually present in the
+built CSS.
+
+One more real, measured miss caught by re-running Lighthouse after that
+fix: `primary-dark` (4.65:1 against pure white) dropped to 4.33:1
+against Login/Signup's slightly off-white page background (`#f5f7f8`,
+not `#fff`) - just under the 4.5:1 minimum. Darkened `primary-dark`
+further (to 6.47:1 against white, with margin) rather than special-case
+one page's background.
+
+Also fixed once the pattern search widened past the one brand color:
+`text-red-500`/`text-green-600`/`text-yellow-600` status text (3.8/3.2/2.9:1,
+all failing) across `ListingDetail`, `TenantDashboard`, `CreateListing`;
+`text-gray-400`/`text-slate-400` used for real content text like "No
+Image" and form helper text (2.6:1, failing - `placeholder:` text was
+left alone, since placeholder contrast is conventionally more lenient
+and wasn't flagged by Lighthouse).
+
+### Lighthouse accessibility score, before → after
+
+| Page | Before | After |
+|---|---|---|
+| Home | 84 | **100** |
+| Find | 79 | **100** |
+| Listing detail | 80 | **100** |
+| Login | not previously tracked | **100** |
+| Signup | not previously tracked | **100** |
+
+Zero remaining automated findings on any of the 5 pages checked, and no
+runtime errors introduced (`r.runtimeError` checked on every page, not
+assumed). Reports: [home](lighthouse/phase4/home.report.html) ·
+[find](lighthouse/phase4/find.report.html) ·
+[listing](lighthouse/phase4/listing.report.html) - Login/Signup were
+accessibility-only runs (`--only-categories=accessibility`), raw JSON at
+`lighthouse/phase4/login.report.json` / `signup.report.json`.
+
+### What automated tools cannot verify - check these manually
+
+Lighthouse and eslint-plugin-jsx-a11y catch missing labels, bad
+contrast, missing landmarks, and similar static/structural issues. They
+cannot tell you the experience is actually good. Specifically worth
+checking by hand:
+
+- **Keyboard-only pass, no mouse at all**: Tab through each of the 5
+  forms and the `CreateListing` wizard end-to-end. Confirm the tab order
+  matches visual order (nothing jumps around), every control is
+  reachable, and the visible focus ring (the new `:focus-visible`
+  outline) is actually visible against every background it lands on.
+- **Modal focus trap, for real**: open `InquiryModal` or
+  `EditPropertyModal`, Tab past the last field and confirm focus wraps
+  to the close button (not out into the page behind it), Shift+Tab from
+  the first field wraps to the last, Escape closes it, and focus visibly
+  lands back on the button that opened it. This is exactly the kind of
+  logic Lighthouse cannot execute - it never actually presses Tab.
+- **Screen reader pass** (VoiceOver on Mac, NVDA on Windows - both free):
+  open the same two modals and confirm the dialog's title is announced
+  immediately on open (not silence, not "the whole page again"); submit
+  each form with a validation error and confirm the error is announced
+  without needing to navigate to it (the `role="alert"` additions are
+  supposed to do this, but only a real screen reader confirms it
+  actually fires); step through `CreateListing`'s room `<fieldset>`s and
+  confirm "Room 2 price" is actually what gets announced, not just
+  "Price" again.
+- **Zoom to 200%**: the multi-step wizard and the filter bar use fairly
+  tight custom widths (`w-[560px]`, `w-[760px]` on the auth screens) -
+  confirm nothing clips or requires horizontal scrolling at high zoom,
+  which Lighthouse's automated pass doesn't check at all.
+- **Reduced motion**: none of this phase's changes added animation
+  beyond existing `transition`/`animate-pulse` classes, but worth a
+  quick check with `prefers-reduced-motion` enabled since it wasn't
+  specifically tested.
