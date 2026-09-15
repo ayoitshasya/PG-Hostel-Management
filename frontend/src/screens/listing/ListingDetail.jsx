@@ -8,6 +8,7 @@
   import { getPrimaryPhoto } from "../../utils/images";
   import { amenityLabel } from "../../api/meta";
   import useListingOptions from "../../hooks/useListingOptions";
+  import Seo from "../../components/Seo";
 
   // Hero is roughly 2/3 of the max-w-7xl (1280px) container on large
   // screens (lg:col-span-2 of 3), full width below that.
@@ -53,9 +54,17 @@
 
     const canInquire = user && user.role === "tenant";
     const photo = getPrimaryPhoto(prop);
+    const priceText = prop.price ? `₹${prop.price}/month` : "Contact for price";
+    const seoDescription = `${prop.title} in ${prop.location?.address || "India"} - ${priceText}. ${prop.propertyType} for ${prop.targetAudience === "co-ed" ? "co-ed" : prop.targetAudience}.`;
 
     return (
       <>
+        <Seo
+          title={prop.title}
+          description={seoDescription}
+          image={photo?.src}
+          url={typeof window !== "undefined" ? window.location.href : undefined}
+        />
         <div className="max-w-7xl mx-auto px-6 py-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 bg-white rounded-2xl shadow overflow-hidden">

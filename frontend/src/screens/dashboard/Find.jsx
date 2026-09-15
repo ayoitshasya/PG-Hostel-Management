@@ -3,6 +3,7 @@ import { fetchProperties } from "../../api/properties";
 import ListingCard from "../../components/ListingCard";
 import SkeletonCard from "../../components/SkeletonCard";
 import useListingOptions from "../../hooks/useListingOptions";
+import Seo from "../../components/Seo";
 
 // Matches the backend's default page size (see propertyController.list's
 // `limit = 20`) so the loading skeleton grid renders the same number of
@@ -111,6 +112,10 @@ export default function Find() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
+      <Seo
+        title="Search PGs, Hostels & Apartments"
+        description="Browse and filter PG, hostel, and shared apartment listings by property type, audience, price, and amenities."
+      />
       <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h1>
       <p className="text-slate-500 mb-8">Find your perfect accommodation</p>
 

@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContextObject";
+import Seo from "../../components/Seo";
 
 export default function RoomieSignup() {
   const { signup } = useContext(AuthContext);
@@ -53,6 +54,7 @@ export default function RoomieSignup() {
 
   return (
     <div className="min-h-screen flex items-start justify-center py-28 bg-[#f5f7f8]">
+      <Seo title="Sign Up" description="Create a free Roomie account to search PG/hostel listings or list your own property." />
       <div className="w-[760px] max-w-[92%] text-center">
         <div className="flex items-center justify-center">
           <div className="w-12 h-12 rounded-full flex items-center justify-center">

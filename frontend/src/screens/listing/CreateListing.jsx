@@ -3,6 +3,7 @@ import API from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import { uploadPropertyPhotos } from "../../api/uploads";
 import useListingOptions from "../../hooks/useListingOptions";
+import Seo from "../../components/Seo";
 
 const MAX_UPLOAD_MB = 8;
 
@@ -190,6 +191,7 @@ export default function CreateListing() {
 
   return (
     <div className="min-h-[70vh] max-w-6xl mx-auto px-6 py-10">
+      <Seo title="List Your Property" description="List your PG, hostel, or apartment on Roomie in a few steps." noindex />
       <div className="mb-6">
         <h1 className="text-3xl font-bold">List Your Property</h1>
         <p className="text-sm text-slate-500 mt-1">Fill details about your property in a few steps</p>

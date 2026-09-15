@@ -4,7 +4,23 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <!--
+      Static fallback title/description/OG tags. This app is a pure
+      client-rendered SPA (no server-side rendering) - a crawler or link
+      unfurler that does NOT execute JavaScript sees exactly this markup
+      and nothing else. React 19 renders per-page <title>/<meta> tags
+      once it hydrates (see src/components/Seo.jsx), which covers crawlers
+      that DO execute JS (Googlebot generally does, with a rendering
+      delay), but anything that only fetches raw HTML - many social media
+      link-preview bots, some simpler crawlers - only ever sees these
+      generic tags, never the per-listing ones. See docs/PERFORMANCE.md
+      for the full writeup of what this means in practice.
+    -->
+    <title>Roomie - PG, Hostel & Apartment Rentals</title>
+    <meta name="description" content="Find and list PGs, hostels, and shared apartments. Search by city, price, and amenities, or list your own property in minutes." />
+    <meta property="og:title" content="Roomie - PG, Hostel & Apartment Rentals" />
+    <meta property="og:description" content="Find and list PGs, hostels, and shared apartments. Search by city, price, and amenities, or list your own property in minutes." />
+    <meta property="og:type" content="website" />
   </head>
   <body>
     <div id="root"></div>

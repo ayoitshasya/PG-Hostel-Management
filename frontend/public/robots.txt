@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /create-listing
+Disallow: /renter-dashboard
+Disallow: /tenant-dashboard
+
+# This is a client-rendered SPA - no server-side rendering - so pages that
+# require a logged-in fetch to show anything meaningful (the dashboards,
+# the create-listing form) are excluded here as a courtesy, alongside the
+# <meta name="robots" content="noindex"> tag each of those pages also
+# renders. Public listing/search pages are left crawlable.

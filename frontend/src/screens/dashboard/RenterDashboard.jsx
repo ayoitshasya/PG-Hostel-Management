@@ -3,6 +3,7 @@ import API from '../../api/api';
 import { AuthContext } from '../../context/AuthContextObject';
 import { Link } from 'react-router-dom';
 import ListingCard from '../../components/ListingCard';
+import Seo from '../../components/Seo';
 
 export default function RenterDashboard(){
   const { user } = useContext(AuthContext);
@@ -17,6 +18,7 @@ export default function RenterDashboard(){
 
   return (
     <div className="min-h-[70vh] max-w-6xl mx-auto px-6 py-10">
+      <Seo title="My Listings" noindex />
       <div className="container-centered py-10">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">My Listings</h1>

@@ -1,9 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Seo from "../components/Seo";
 
 export default function Home() {
   return (
     <div className="min-h-[80vh] flex flex-col bg-white">
+      <Seo
+        title="PG, Hostel & Apartment Rentals"
+        description="Find and list PGs, hostels, and shared apartments. Search by city, price, and amenities, or list your own property in minutes."
+      />
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
         <div className="relative w-full max-w-6xl rounded-2xl overflow-hidden shadow-xl">
           <img
