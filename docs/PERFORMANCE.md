@@ -852,3 +852,96 @@ combination). Cloudinary: listings 0-19 keep identical public_ids/content
 to today (net-zero new assets, ~237 refreshed in place), only the 1 new
 listing needs new uploads (2 photos × up to 3 variants = up to 6 new
 assets) - **up to 243 total assets after seeding, only ~6 of them new.**
+
+---
+
+## Phase 5 — SEO (2026-09-16)
+
+### What was done
+
+1. **Per-page `<title>`/meta description**, using React 19's native
+   support for rendering `<title>`/`<meta>`/`<link>` anywhere in a
+   component tree - React hoists them into the real document `<head>`
+   automatically (no `react-helmet` or similar library needed). A shared
+   `Seo.jsx` component wraps this so every screen uses the same pattern:
+   `Home`, `Find`, `Login`, `Signup`, `CreateListing`, `RenterDashboard`,
+   `TenantDashboard`, `NotFound`, and `ListingDetail` each render
+   `<Seo title=... description=... />`.
+2. **`ListingDetail` uses the listing's actual title, location, and
+   price** - not a generic template: `<Seo title={prop.title}
+   description={`${prop.title} in ${prop.location.address} - ₹${prop.price}/month...`} image={photo?.src} url={window.location.href} />`.
+   This is real per-listing content, not a static string.
+3. **Open Graph tags** on every page (`og:title`, `og:description`,
+   `og:type`, `og:url`, `og:image` where available, `twitter:card`) -
+   `ListingDetail` additionally passes the listing's actual hero photo as
+   `og:image`, so a shared link preview shows the real listing photo, not
+   a generic site logo.
+4. **`noindex`** on the four auth-gated screens (`CreateListing`,
+   `RenterDashboard`, `TenantDashboard`) and `NotFound` - there's nothing
+   for an anonymous crawler to usefully index there, and `NotFound`
+   specifically can't send a real HTTP 404 (see limits section below), so
+   `noindex` is the only signal available to say "nothing here."
+5. **`robots.txt`** (`frontend/public/robots.txt`) - allows the public
+   pages, disallows the auth-gated ones as a courtesy alongside their
+   `noindex` tags.
+6. **Static fallback tags in `index.html`** - a real title, meta
+   description, and generic OG tags, since a crawler that doesn't execute
+   JavaScript never sees anything React renders (see below).
+
+### Lighthouse SEO score, before → after
+
+| Page | Before | After |
+|---|---|---|
+| Home | 83 | **100** |
+| Find | 83 | **100** |
+| Listing detail | 83 | **100** |
+
+Zero remaining automated findings, no runtime errors. Same method as
+every other phase (3 runs baseline; a single confirmatory run here since
+SEO audits are static/structural checks - title present, meta description
+present, robots.txt valid, links crawlable - not something that varies
+run to run the way performance timing metrics do). Reports:
+[home](lighthouse/phase5/home.report.html) ·
+[find](lighthouse/phase5/find.report.html) ·
+[listing](lighthouse/phase5/listing.report.html)
+
+### Being honest about what this does and doesn't fix
+
+Lighthouse's SEO score checks structural things - is there a title, is
+there a meta description, is robots.txt valid, are links crawlable. All
+of that is now correct. **What Lighthouse's SEO score cannot tell you,
+and what actually matters more for a real site, is whether the tags this
+app renders are ever seen by the things that matter:**
+
+- **This is a client-rendered SPA with no server-side rendering.** The
+  server always returns the same static `index.html` (checked in
+  `index.html`'s own comments) - an empty `<div id="root"></div>` plus a
+  script tag. Everything else, including every `<title>`/`<meta>` this
+  phase added, is written by React *after* JavaScript downloads, parses,
+  and runs. A crawler or tool that only fetches raw HTML sees the generic
+  fallback tags in `index.html` and nothing else - never a real listing's
+  title, description, or photo.
+- **Googlebot generally does execute JavaScript**, but on a delayed
+  second pass, not the initial crawl - so even Google may index a stale
+  or generic version of a page before the JS-rendered version is
+  processed. This is a well-documented characteristic of CSR SPAs, not
+  specific to this app.
+- **Most link-preview bots (Slack, WhatsApp, iMessage, and many others)
+  do not execute JavaScript at all.** Paste a listing URL into one of
+  these today and it will show the generic site-wide OG tags from
+  `index.html`, not the listing's actual title/price/photo, no matter
+  how correct `ListingDetail`'s `Seo` component is - the bot simply never
+  runs the code that would render them.
+- **`NotFound` cannot send a real HTTP 404.** Client-side routing means
+  the server returns `200 OK` with `index.html` for *any* path, and
+  React Router decides afterward that the route doesn't match anything.
+  `noindex` is a real, useful signal for crawlers that render JS, but a
+  crawler reading only HTTP status codes sees "200, this page exists"
+  for a URL that doesn't.
+- **The actual fix for all of the above is server-side rendering or
+  static generation** (Next.js, Remix, or a pre-rendering step that
+  serves crawlers a fully-rendered HTML snapshot) - genuinely out of
+  scope for a Vite CSR SPA without a larger architectural change, not
+  something addressable by adding more meta tags. Worth knowing and
+  saying plainly rather than letting a 100 Lighthouse SEO score imply
+  more than it does.
