@@ -763,3 +763,92 @@ checking by hand:
   beyond existing `transition`/`animate-pulse` classes, but worth a
   quick check with `prefers-reduced-motion` enabled since it wasn't
   specifically tested.
+
+---
+
+## Interlude — `/find` filter bug fix (2026-09-16)
+
+Reported: selecting Apartment + Men + wifi/parking/ac on `/find` returned
+"No results found" even though the "Recommended" row showed a men's
+hostel and a co-ed apartment. Diagnosed with curl against live data
+before writing any fix - it was **two independent bugs**, not one:
+
+1. **Amenities case/wording mismatch.** `Find.jsx`'s filter chips sent
+   lowercase (`wifi`), seeded data stored capitalized/differently-worded
+   values (`WiFi`, `Power Backup`), and `CreateListing`'s checkboxes used
+   a *third*, different set entirely (`gas`, `hotWater` - not even in the
+   seed's pool). Confirmed with curl: `amenities=wifi` and
+   `amenities=WiFi` both returned 0 against data that provably had
+   `'WiFi'` stored, until fixed.
+2. **The old seed script's data-generation bug** (unrelated to
+   amenities): `pick(PROPERTY_TYPES, i)` and `pick(AUDIENCES, i)` both
+   used `i % 3` (both arrays have length 3), so type and audience always
+   advanced in lockstep. Only 3 of the 9 possible combinations ever
+   existed: PG+women, Hostel+men, Apartment+co-ed. Confirmed by
+   aggregating the live data: **zero** listings existed with
+   Apartment+Men, independent of amenities entirely.
+
+For the exact repro (Apartment + Men + amenities), bug #2 was the
+dominant cause - that combination could not have returned results no
+matter what amenities were selected, since it never existed. Bug #1 is
+real and separately confirmed (checked against PG+women, which does
+have data: `amenities=WiFi` returned 0 before the fix on data confirmed
+to contain `'WiFi'`).
+
+**Fix**: `backend/constants/listingOptions.js` is now the single source
+of truth for propertyType/audience/furnishing/status/amenities, enforced
+by the Property model's enum validation and exposed via a new public
+`GET /api/meta/options` endpoint that `Find.jsx`/`CreateListing.jsx` now
+fetch instead of hardcoding their own copy. Amenities are stored
+lowercase (schema `lowercase: true`) and matched case-insensitively on
+the query side too. `propertyType`/`targetAudience`/`furnishing`/`status`
+were confirmed (direct comparison, not assumed) to already match the new
+constants exactly - no data migration needed for those four fields, only
+amenities.
+
+**Migration** (`backend/migrate-amenities.js`, run by the user, not me -
+data-changing scripts are their call): `--dry-run` first showed 20/20
+documents needing a case/wording change, 0 merges, 0 unmapped values;
+the live run applied it; a second `--dry-run` afterward showed 0 -
+confirmed idempotent.
+
+**Verified with curl after the fix** (all against the pre-existing
+20-listing dataset, before any seed changes):
+
+| Filter | Result |
+|---|---|
+| `amenities=wifi` | 12 results, all genuinely have `wifi` |
+| `amenities=parking,ac` (must have both) | 2 results, both genuinely have both |
+| `propertyType=Apartment&audience=men` | 0 (confirmed: this combination didn't exist in the old data - see bug #2 above) |
+| `minPrice=8000&maxPrice=14000` | 10 results, all within range |
+| `amenities=wifi,parking,gym,cctv,lift` (5 amenities together) | 0 (no listing has all 5 - genuine empty state, not a bug) |
+
+### Expanded seed data (prepared, not yet run)
+
+`backend/seed.js` rewritten to cover every `propertyType` x `audience`
+combination properly (21 listings instead of 20), so gaps like bug #2
+above can't recur. Not run - the user runs data-changing scripts
+themselves. Hand-verified against the actual code logic (and available
+to re-check anytime via `npm run seed:plan`, which does zero network/DB
+calls):
+
+| propertyType + audience | Listings |
+|---|---|
+| PG + women | 3 |
+| PG + men | 3 |
+| PG + co-ed | 3 |
+| Apartment + men | 3 |
+| Apartment + co-ed | 3 |
+| Hostel + women | 3 |
+| Hostel + men | 3 |
+| **Hostel + co-ed** | **0 (deliberately empty)** |
+| **Apartment + women** | **0 (deliberately empty)** |
+
+Price: INR 3000–25000, 21 evenly-spread values. Amenities: 7 hand-designed
+sets cycled by listing index, every canonical amenity on ≥6 of 21
+listings, `wifi`+`parking`+`ac` together on 6 listings, `{geyser, cctv}`
+deliberately never co-occurring (a verifiable "returns nothing" filter
+combination). Cloudinary: listings 0-19 keep identical public_ids/content
+to today (net-zero new assets, ~237 refreshed in place), only the 1 new
+listing needs new uploads (2 photos × up to 3 variants = up to 6 new
+assets) - **up to 243 total assets after seeding, only ~6 of them new.**
