@@ -190,13 +190,19 @@ npm run dev             # nodemon, reloads on change
 
 `.env` variables:
 ```
-MONGO_URI=mongodb://localhost:27017/pg_hostel
+MONGODB_URI=mongodb://localhost:27017/pg_hostel
 PORT=5000
 JWT_SECRET=<any long random string>
 ```
-> Note: `backend/index.js` reads `process.env.MONGODB_URI` (falls back to `mongodb://localhost:27017/pg_hostel` if unset), while `.env.example` documents `MONGO_URI`. Make sure the variable name in your `.env` matches what `index.js` actually reads before relying on the fallback.
 
 The API starts on `http://localhost:5000` (or your `PORT`).
+
+### Seeding sample data
+```bash
+cd backend
+npm run seed    # wipes Users/Properties/Inquiries in MONGODB_URI's database and creates fresh sample data
+```
+Creates ~4 renters, ~5 tenants, and ~20 listings with realistic details and photo URLs, so pages have real content to browse or measure performance against. **This deletes existing Users/Properties/Inquiries data in the target database** — only run it against a dev database.
 
 ### Frontend setup
 ```bash
@@ -224,7 +230,6 @@ These are useful to know before extending the app — noted here rather than fix
 - **Renter inquiry inbox not surfaced in the UI.** `GET /api/inquiries` (list inquiries for a renter's properties) and `PUT /api/inquiries/:id/status` are implemented on the backend and in `src/api/inquiries.js`, but `RenterDashboard.jsx` only lists properties — there's no screen consuming `fetchOwnerInquiries`/`updateInquiryStatus` yet.
 - **No ownership check on inquiry status updates.** `inquiryController.updateStatus` doesn't verify the requester actually owns the property tied to the inquiry.
 - **Hardcoded URLs.** API base URL and CORS origin are hardcoded rather than driven by environment variables, so deploying beyond localhost requires manual edits in both apps.
-- **`.env.example` / `index.js` variable name mismatch** for the Mongo connection string (see setup note above).
 
 ---
 
@@ -233,6 +238,7 @@ These are useful to know before extending the app — noted here rather than fix
 **Backend** (`backend/package.json`)
 - `npm start` — run once with plain `node`
 - `npm run dev` — run with `nodemon` (auto-restart)
+- `npm run seed` — wipe and repopulate the database with sample renters/tenants/listings
 
 **Frontend** (`frontend/package.json`)
 - `npm run dev` — Vite dev server
