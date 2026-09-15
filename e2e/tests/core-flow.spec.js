@@ -56,10 +56,7 @@ test('renter creates a listing, tenant finds it, inquires, and sees it on their 
   await test.step('tenant searches and filters on /find', async () => {
     await page.goto('/find');
     await page.getByLabel('Search for PG or Hostel').fill(listingTitle);
-    // Scoped to the search <form> - the "search" tab button above it has
-    // the same accessible name ("Search"), so an unscoped role query is
-    // ambiguous even with exact: true.
-    await page.locator('form').getByRole('button', { name: 'Search', exact: true }).click();
+    await page.getByRole('button', { name: 'Search', exact: true }).click();
     await expect(page.getByRole('heading', { name: listingTitle })).toBeVisible({ timeout: 10000 });
   });
 

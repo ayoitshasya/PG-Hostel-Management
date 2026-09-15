@@ -128,7 +128,7 @@ export default function Find() {
               : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          Search
+          Browse
         </button>
       </div>
 
