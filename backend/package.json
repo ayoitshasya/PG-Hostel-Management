@@ -6,6 +6,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "seed": "node seed.js",
+    "seed:plan": "node seed.js --plan",
     "migrate:amenities": "node migrate-amenities.js",
     "migrate:amenities:dry": "node migrate-amenities.js --dry-run"
   },

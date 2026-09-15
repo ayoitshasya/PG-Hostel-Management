@@ -5,6 +5,7 @@ const User = require('./models/User');
 const Property = require('./models/Property');
 const Inquiry = require('./models/Inquiry');
 const { processAndUploadImage } = require('./lib/imagePipeline');
+const { PROPERTY_TYPES, AUDIENCES, FURNISHING } = require('./constants/listingOptions');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pg_hostel';
 const HAS_CLOUDINARY = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
@@ -22,6 +23,18 @@ const PHOTO_SEEDS = [
   'roomie-21', 'roomie-22', 'roomie-23', 'roomie-24', 'roomie-25',
 ];
 
+// The first 20 listing indices (0-19) and their photo counts are
+// UNCHANGED from the previous seed - same index, same photoCount formula,
+// same picsum seed selection - so re-running this script re-uploads
+// identical bytes to identical Cloudinary public_ids for all of them
+// (net-zero new assets: Cloudinary overwrites in place). Only index 20
+// (the one new listing added to hit 21) is genuinely new, and its photo
+// count is kept small (2, not the usual 3-5) specifically to keep new
+// uploads minimal. See printPlan() below for the exact math.
+function photoCountFor(index) {
+  return index < 20 ? 3 + (index % 3) : 2;
+}
+
 async function fetchAndProcessPhotos(index, count, listingLabel) {
   const photoAssets = [];
   for (let i = 0; i < count; i++) {
@@ -32,10 +45,10 @@ async function fetchAndProcessPhotos(index, count, listingLabel) {
     if (!res.ok) throw new Error(`Failed to fetch ${sourceUrl}: ${res.status}`);
     const buffer = Buffer.from(await res.arrayBuffer());
     // Deterministic per listing-index + photo-slot (not per picsum seed
-    // name, since the 25 picsum seeds repeat across 20 listings x up to 5
-    // photos - keying on the seed name would make unrelated listings
-    // share the same Cloudinary asset, so deleting one listing would
-    // delete another listing's photo too). This makes re-running the seed
+    // name, since the 25 picsum seeds repeat across listings x photos -
+    // keying on the seed name would make unrelated listings share the
+    // same Cloudinary asset, so deleting one listing would delete
+    // another listing's photo too). This makes re-running the seed
     // idempotent: same slot -> same public_id -> Cloudinary overwrites
     // the old file instead of piling up duplicates.
     const asset = await processAndUploadImage(buffer, {
@@ -76,11 +89,6 @@ const TENANTS = [
   { name: 'Divya Rao', email: 'divya.tenant@example.com', phone: '9900055555' },
 ];
 
-const AMENITY_POOL = [
-  'WiFi', 'AC', 'Laundry', 'Housekeeping', 'Power Backup', 'Lift',
-  'CCTV', 'Parking', 'Refrigerator', 'Geyser', 'TV', 'Gym',
-];
-
 const LOCALITIES = [
   { city: 'Andheri East, Mumbai', lat: 19.1136, lng: 72.8697 },
   { city: 'Koramangala, Bengaluru', lat: 12.9352, lng: 77.6245 },
@@ -94,27 +102,85 @@ const LOCALITIES = [
   { city: 'HSR Layout, Bengaluru', lat: 12.9121, lng: 77.6446 },
 ];
 
-const PROPERTY_TYPES = ['PG', 'Hostel', 'Apartment'];
-const AUDIENCES = ['women', 'men', 'co-ed'];
-const FURNISHING = ['furnished', 'semi-furnished', 'unfurnished'];
+// Every (propertyType, targetAudience) pair EXCEPT these two is populated
+// with 3 listings below - these two are deliberately left with zero
+// listings so the "No results found" empty state has a real combination
+// to test against, not just an out-of-range price.
+const EMPTY_COMBOS = [
+  { propertyType: 'Hostel', targetAudience: 'co-ed' },
+  { propertyType: 'Apartment', targetAudience: 'women' },
+];
+
+function isEmptyCombo(propertyType, targetAudience) {
+  return EMPTY_COMBOS.some((c) => c.propertyType === propertyType && c.targetAudience === targetAudience);
+}
+
+// All 9 propertyType x audience pairs, minus the 2 deliberately-empty
+// ones = 7 populated combos, x3 listings each = 21 listings (indices 0-20).
+// This replaces the old seed's bug: it picked propertyType and audience
+// with the same `i % 3` modulus (both arrays have length 3), so type and
+// audience always advanced in lockstep and only 3 of the 9 possible pairs
+// were ever generated (PG+women, Hostel+men, Apartment+co-ed) - e.g.
+// "Apartment + Men" never existed, regardless of any other filter.
+const COMBOS = PROPERTY_TYPES.flatMap((propertyType) =>
+  AUDIENCES.map((a) => ({ propertyType, targetAudience: a.value }))
+).filter((c) => !isEmptyCombo(c.propertyType, c.targetAudience));
+
+const LISTINGS_PER_COMBO = 3;
+const TOTAL_LISTINGS = COMBOS.length * LISTINGS_PER_COMBO; // 7 * 3 = 21
+
+// 7 realistic amenity combinations, cycled by listing index (21 listings /
+// 7 sets = each set used exactly 3 times). Designed so that:
+// - every one of the 12 canonical amenities appears on multiple listings
+//   ("several", per the brief) - the thinnest (refrigerator) still gets 2
+//   sets x 3 listings = 6.
+// - sets A and F both include wifi+parking+ac together (6 listings total),
+//   so a multi-amenity filter on those three returns a real result.
+// - {geyser, cctv} never co-occurs in any set - a real, verifiable
+//   "returns nothing" combination (used in the curl checks below).
+const AMENITY_SETS = [
+  ['wifi', 'parking', 'ac', 'laundry'],                       // A
+  ['wifi', 'housekeeping', 'geyser'],                          // B
+  ['ac', 'cctv', 'lift', 'power-backup', 'refrigerator'],      // C
+  ['wifi', 'parking', 'gym', 'tv'],                            // D
+  ['laundry', 'refrigerator', 'geyser', 'housekeeping'],       // E
+  ['wifi', 'ac', 'parking', 'cctv', 'lift'],                   // F
+  ['power-backup', 'gym', 'tv', 'cctv'],                       // G
+];
+
+function amenitiesFor(i) {
+  return AMENITY_SETS[i % AMENITY_SETS.length];
+}
+
+// 3000 to 25000 across 21 listings, evenly spread, so minPrice/maxPrice
+// filters at different thresholds actually produce different result sets
+// instead of clustering in one narrow band (the old 6000-16800 range).
+function priceFor(i) {
+  return 3000 + i * 1100;
+}
+
+function furnishingFor(i) {
+  return FURNISHING[i % FURNISHING.length].value;
+}
+
+function statusFor(i) {
+  if (i % 6 === 0) return 'rented';
+  if (i % 5 === 0) return 'coming_soon';
+  return 'available';
+}
 
 function pick(arr, i) {
   return arr[i % arr.length];
 }
 
-function amenitiesFor(index) {
-  const shuffled = [...AMENITY_POOL].sort((a, b) => ((index * 7 + a.length) % 5) - ((index * 3 + b.length) % 5));
-  return shuffled.slice(0, 4 + (index % 4));
-}
-
 async function buildListings(renterDocs) {
   const listings = [];
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < TOTAL_LISTINGS; i++) {
+    const combo = COMBOS[Math.floor(i / LISTINGS_PER_COMBO)];
+    const { propertyType, targetAudience: audience } = combo;
     const locality = pick(LOCALITIES, i);
-    const propertyType = pick(PROPERTY_TYPES, i);
-    const audience = pick(AUDIENCES, i);
-    const furnishing = pick(FURNISHING, i);
-    const basePrice = 6000 + (i % 10) * 1200;
+    const furnishing = furnishingFor(i);
+    const basePrice = priceFor(i);
     const roomCount = 2 + (i % 3);
 
     const rooms = Array.from({ length: roomCount }, (_, r) => ({
@@ -125,9 +191,9 @@ async function buildListings(renterDocs) {
       status: r === 0 && i % 6 === 0 ? 'booked' : 'available',
     }));
 
-    const photoCount = 3 + (i % 3); // 3-5 photos per listing
+    const photoCount = photoCountFor(i);
     const photoAssets = HAS_CLOUDINARY
-      ? await fetchAndProcessPhotos(i, photoCount, `listing ${i + 1}/20`)
+      ? await fetchAndProcessPhotos(i, photoCount, `listing ${i + 1}/${TOTAL_LISTINGS}`)
       : [];
 
     listings.push({
@@ -154,10 +220,55 @@ async function buildListings(renterDocs) {
       },
       photos: HAS_CLOUDINARY ? [] : plainPhotoUrlsFor(i, photoCount),
       photoAssets,
-      status: i % 9 === 0 ? 'rented' : i % 7 === 0 ? 'coming_soon' : 'available',
+      status: statusFor(i),
     });
   }
   return listings;
+}
+
+// Pure computation, zero I/O (no Mongo connection, no Cloudinary, no
+// network fetch) - safe to run without any credentials configured.
+// Prints exactly what `node seed.js` would create, computed from the
+// same COMBOS/amenitiesFor/priceFor/photoCountFor functions the real run
+// uses, so this can't drift out of sync with actual behavior.
+function printPlan() {
+  console.log(`Would wipe MONGODB_URI's database: ${MONGODB_URI}\n`);
+  console.log(`Would create: ${RENTERS.length} renters, ${TENANTS.length} tenants, ${TOTAL_LISTINGS} listings, 8 inquiries.\n`);
+
+  console.log('Listings per propertyType x audience:');
+  const counts = {};
+  for (let i = 0; i < TOTAL_LISTINGS; i++) {
+    const combo = COMBOS[Math.floor(i / LISTINGS_PER_COMBO)];
+    const key = `${combo.propertyType} + ${combo.targetAudience}`;
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  Object.entries(counts).sort().forEach(([k, v]) => console.log(`  ${k}: ${v}`));
+  EMPTY_COMBOS.forEach((c) => {
+    const key = `${c.propertyType} + ${c.targetAudience}`;
+    console.log(`  ${key}: 0 (deliberately empty)`);
+  });
+
+  console.log('\nListings per amenity (how many of the 21 listings include each):');
+  const amenityCounts = {};
+  for (let i = 0; i < TOTAL_LISTINGS; i++) {
+    amenitiesFor(i).forEach((a) => { amenityCounts[a] = (amenityCounts[a] || 0) + 1; });
+  }
+  Object.entries(amenityCounts).sort().forEach(([k, v]) => console.log(`  ${k}: ${v}`));
+
+  console.log(`\nPrice range: INR ${priceFor(0)} to INR ${priceFor(TOTAL_LISTINGS - 1)}`);
+
+  console.log('\nCloudinary photo plan (only relevant if CLOUDINARY_* env vars are set):');
+  let existingPublicIds = 0;
+  let newPublicIds = 0;
+  for (let i = 0; i < TOTAL_LISTINGS; i++) {
+    const count = photoCountFor(i);
+    if (i < 20) existingPublicIds += count; else newPublicIds += count;
+  }
+  console.log(`  Listings 0-19 (existing): ${existingPublicIds} photo public_ids re-uploaded in place (same content, same IDs - net-zero new assets, up to 3 variants each = up to ${existingPublicIds * 3} assets refreshed).`);
+  console.log(`  Listing 20 (new): ${newPublicIds} photo public_ids never used before - genuinely new, up to 3 variants each = up to ${newPublicIds * 3} new assets.`);
+  console.log(`  Total distinct Cloudinary assets after seeding: up to ${(existingPublicIds + newPublicIds) * 3} (up from 237 today), of which only up to ${newPublicIds * 3} are actually new uploads.`);
+
+  console.log('\nThis was computed with zero network/database calls. Run without --plan to actually seed (you run that step).');
 }
 
 async function seed() {
@@ -191,8 +302,8 @@ async function seed() {
   const listings = await buildListings(renterDocs);
   const listingDocs = await Property.insertMany(listings);
 
-  console.log('Creating a few sample inquiries...');
-  const sampleInquiries = listingDocs.slice(0, 6).map((listing, i) => ({
+  console.log('Creating sample inquiries...');
+  const sampleInquiries = listingDocs.slice(0, 8).map((listing, i) => ({
     property: listing._id,
     tenant: tenantDocs[i % tenantDocs.length]._id,
     message: `Hi, I'm interested in this ${listing.propertyType.toLowerCase()}. Is it still available? Could we schedule a visit this week?`,
@@ -201,13 +312,30 @@ async function seed() {
   await Inquiry.insertMany(sampleInquiries);
 
   console.log(`\nDone. Created ${renterDocs.length} renters, ${tenantDocs.length} tenants, ${listingDocs.length} listings, ${sampleInquiries.length} inquiries.`);
-  console.log('Sample login: any seeded email above with password "Password123!"');
+
+  console.log('\nListings per propertyType x audience:');
+  const counts = {};
+  listingDocs.forEach((l) => {
+    const key = `${l.propertyType} + ${l.targetAudience}`;
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  Object.entries(counts).sort().forEach(([k, v]) => console.log(`  ${k}: ${v}`));
+  EMPTY_COMBOS.forEach((c) => {
+    const key = `${c.propertyType} + ${c.targetAudience}`;
+    if (!counts[key]) console.log(`  ${key}: 0 (deliberately empty)`);
+  });
+
+  console.log('\nSample login: any seeded email above with password "Password123!"');
   console.log(`Example listing id for manual testing: ${listingDocs[0]._id}`);
 
   await mongoose.disconnect();
 }
 
-seed().catch((err) => {
-  console.error('Seed failed:', err);
-  process.exit(1);
-});
+if (process.argv.includes('--plan')) {
+  printPlan();
+} else {
+  seed().catch((err) => {
+    console.error('Seed failed:', err);
+    process.exit(1);
+  });
+}

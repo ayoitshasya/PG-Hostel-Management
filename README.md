@@ -211,9 +211,16 @@ The API starts on `http://localhost:5000` (or your `PORT`).
 ### Seeding sample data
 ```bash
 cd backend
-npm run seed    # wipes Users/Properties/Inquiries in MONGODB_URI's database and creates fresh sample data
+npm run seed:plan   # prints the planned counts (no database/network calls) - review before seeding
+npm run seed         # wipes Users/Properties/Inquiries in MONGODB_URI's database and creates fresh sample data
 ```
-Creates ~4 renters, ~5 tenants, and ~20 listings with realistic details and photo URLs, so pages have real content to browse or measure performance against. **This deletes existing Users/Properties/Inquiries data in the target database** — only run it against a dev database.
+Creates 4 renters, 5 tenants, and 21 listings covering every `propertyType`
+x `targetAudience` combination except two deliberately-empty ones (so the
+"No results found" state has something real to test), with prices spread
+INR 3000–25000 and amenities distributed so every filter combination in
+`/find` returns a real, checkable result. **This deletes existing
+Users/Properties/Inquiries data in the target database** — only run it
+against a dev database.
 
 ### Image uploads
 
