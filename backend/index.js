@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const propertyRoutes = require('./routes/properties');
 const inquiryRoutes = require('./routes/inquiries');
 const uploadRoutes = require('./routes/uploads');
+const metaRoutes = require('./routes/meta');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/meta', metaRoutes);
 
 app.get('/', (req, res) => res.json({ ok: true }));
 

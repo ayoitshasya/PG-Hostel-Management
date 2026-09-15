@@ -1,4 +1,10 @@
 const mongoose = require("mongoose");
+const { PROPERTY_TYPES, AUDIENCES, FURNISHING, STATUSES, AMENITIES } = require("../constants/listingOptions");
+
+const AUDIENCE_VALUES = AUDIENCES.map((a) => a.value);
+const FURNISHING_VALUES = FURNISHING.map((f) => f.value);
+const STATUS_VALUES = STATUSES.map((s) => s.value);
+const AMENITY_VALUES = AMENITIES.map((a) => a.value);
 
 const PhotoVariantSchema = new mongoose.Schema(
   {
@@ -46,15 +52,18 @@ const PropertySchema = new mongoose.Schema(
     },
     title: { type: String, required: true },
     description: String,
-    propertyType: String,
-    targetAudience: String, // women/men/co-ed
+    propertyType: { type: String, enum: PROPERTY_TYPES },
+    targetAudience: { type: String, enum: AUDIENCE_VALUES },
     furnishing: {
       type: String,
-      enum: ["furnished", "semi-furnished", "unfurnished"],
+      enum: FURNISHING_VALUES,
       default: "unfurnished",
     },
     petsAllowed: { type: Boolean, default: false },
-    amenities: [String],
+    // lowercase:true normalizes incoming values ("WiFi" -> "wifi") before
+    // the enum check runs, so a client sending old-style casing still
+    // works instead of failing validation.
+    amenities: [{ type: String, enum: AMENITY_VALUES, lowercase: true, trim: true }],
     rooms: [RoomSchema],
     totalRooms: Number,
     occupancyPerRoom: Number,
@@ -75,7 +84,7 @@ const PropertySchema = new mongoose.Schema(
     photoAssets: [PhotoAssetSchema],
     status: {
       type: String,
-      enum: ["available", "rented", "coming_soon"],
+      enum: STATUS_VALUES,
       default: "available",
     },
   },

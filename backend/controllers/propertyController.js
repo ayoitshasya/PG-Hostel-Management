@@ -22,9 +22,15 @@ exports.list = async (req, res) => {
     const filter = {};
 
     if (amenities) {
+      // Stored amenities are always lowercase (Property model normalizes
+      // on save) - lowercase the incoming filter too so "WiFi" and "wifi"
+      // both match. Belt-and-suspenders: the frontend now fetches
+      // canonical lowercase values from GET /api/meta/options, so this
+      // shouldn't be reachable with mismatched casing, but a stale client
+      // or hand-crafted request still gets a correct match.
       const arr = String(amenities)
         .split(",")
-        .map((a) => a.trim())
+        .map((a) => a.trim().toLowerCase())
         .filter(Boolean);
       if (arr.length) filter.amenities = { $all: arr };
     }
