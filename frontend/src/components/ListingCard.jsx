@@ -1,5 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getPrimaryPhoto } from "../utils/images";
+
+// Card is up to 1/3 of the viewport width on large screens (grid-cols-3),
+// 1/2 on medium (grid-cols-2), full width below that - matches the grid
+// classes in Find.jsx so the browser picks an accurately-sized variant.
+const CARD_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw";
 
 // priority: set true only for the single card most likely to be the page's
 // LCP (largest contentful paint) element - e.g. the first card above the
@@ -9,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 export default function ListingCard({ property, priority = false }) {
   const nav = useNavigate();
   const [imgError, setImgError] = useState(false);
-  const thumbnail = property.photos?.[0] || "";
+  const photo = getPrimaryPhoto(property);
   const price = property.price ?? property.rooms?.[0]?.price ?? null;
   const priceLabel = price ? `${property.currency ?? "INR"} ${price}` : "Price N/A";
   const subtitle = property.description || property.propertyType || "";
@@ -25,9 +31,11 @@ export default function ListingCard({ property, priority = false }) {
       className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all overflow-hidden cursor-pointer"
     >
       <div className="w-full h-44 md:h-40 lg:h-44 bg-gray-100">
-        {thumbnail && !imgError ? (
+        {photo && !imgError ? (
           <img
-            src={thumbnail}
+            src={photo.src}
+            srcSet={photo.srcSet}
+            sizes={photo.srcSet ? CARD_SIZES : undefined}
             alt={property.title}
             className="w-full h-full object-cover"
             width="640"

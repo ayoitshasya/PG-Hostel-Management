@@ -4,7 +4,12 @@
   import { AuthContext } from "../../context/AuthContextObject";
   import InquiryModal from "../../components/InquiryModal";
   import EditPropertyModal from "../../components/EditPropertyModal";
-  
+  import ListingDetailSkeleton from "../../components/ListingDetailSkeleton";
+  import { getPrimaryPhoto } from "../../utils/images";
+
+  // Hero is roughly 2/3 of the max-w-7xl (1280px) container on large
+  // screens (lg:col-span-2 of 3), full width below that.
+  const HERO_SIZES = "(min-width: 1024px) 66vw, 100vw";
 
   export default function ListingDetail() {
     const { id } = useParams();
@@ -32,11 +37,7 @@
     }
 
     if (loading) {
-      return (
-        <div className="flex justify-center items-center h-[70vh] text-gray-500">
-          Loading property details...
-        </div>
-      );
+      return <ListingDetailSkeleton />;
     }
 
     if (!prop) {
@@ -48,20 +49,23 @@
     }
 
     const canInquire = user && user.role === "tenant";
+    const photo = getPrimaryPhoto(prop);
 
     return (
       <>
         <div className="max-w-7xl mx-auto px-6 py-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 bg-white rounded-2xl shadow overflow-hidden">
-              {prop.photos && prop.photos.length > 0 && !heroImgError ? (
-                <div className="h-80 w-full">
+              {photo && !heroImgError ? (
+                <div className="w-full aspect-[8/5]">
                   <img
-                    src={prop.photos[0]}
+                    src={photo.src}
+                    srcSet={photo.srcSet}
+                    sizes={photo.srcSet ? HERO_SIZES : undefined}
                     alt={prop.title}
                     className="w-full h-full object-cover"
-                    width="1600"
-                    height="1000"
+                    width={photo.width || 1600}
+                    height={photo.height || 1000}
                     loading="eager"
                     fetchPriority="high"
                     decoding="async"
@@ -69,7 +73,7 @@
                   />
                 </div>
               ) : (
-                <div className="h-80 w-full bg-gray-100 flex items-center justify-center text-gray-400">
+                <div className="w-full aspect-[8/5] bg-gray-100 flex items-center justify-center text-gray-400">
                   No Image Available
                 </div>
               )}
