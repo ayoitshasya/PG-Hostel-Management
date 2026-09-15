@@ -98,7 +98,7 @@ Role is chosen at signup and is required at login (login fails with 403 if the r
 - `rooms[]` — embedded `Room` subdocuments (`name`, `price`, `occupancy`, `availableFrom`, `status`); `totalRooms`/`occupancyPerRoom` are derived summary fields.
 - `price`/`currency` — top-level default price shown on cards (falls back to first room's price on the frontend).
 - `location` — `address`, `lat`/`lng`, `googleMapsUrl`.
-- `photos[]` — array of image URLs (no file upload/storage backend — see [Known Limitations](#7-known-limitations)).
+- `photos[]` — array of image URLs (no file upload/storage backend — see [Known Limitations](#8-known-limitations)).
 - `status` — `available` / `rented` / `coming_soon`.
 
 **Inquiry** (`backend/models/Inquiry.js`)
@@ -193,7 +193,11 @@ npm run dev             # nodemon, reloads on change
 MONGODB_URI=mongodb://localhost:27017/pg_hostel
 PORT=5000
 JWT_SECRET=<any long random string>
+CLIENT_ORIGIN=http://localhost:5173
 ```
+`CLIENT_ORIGIN` is the single origin allowed to call this API (sets the CORS
+`Access-Control-Allow-Origin` header) — set it to your deployed frontend's
+URL in production.
 
 The API starts on `http://localhost:5000` (or your `PORT`).
 
@@ -208,10 +212,22 @@ Creates ~4 renters, ~5 tenants, and ~20 listings with realistic details and phot
 ```bash
 cd frontend
 npm install
+cp .env.example .env   # optional locally; defaults already match the backend above
 npm run dev    # Vite dev server, defaults to http://localhost:5173
 ```
 
-The frontend's Axios base URL (`src/api/api.js`) and the backend's CORS `origin` (`backend/index.js`) are both hardcoded to `http://localhost:5000/api` and `http://localhost:5173` respectively — update both if you change ports.
+`.env` variables:
+```
+VITE_API_URL=http://localhost:5000/api
+```
+`VITE_API_URL` is the Axios base URL (`src/api/api.js`) the frontend calls.
+Vite only exposes env vars prefixed `VITE_` to client code, and only
+variables present **at build time** are baked into the bundle — set this in
+your hosting provider's environment settings before building for
+production, not after.
+
+If you change ports or deploy, set `VITE_API_URL` (frontend) and
+`CLIENT_ORIGIN` (backend) to match each other.
 
 ### Typical flow to try it locally
 1. Start MongoDB, then the backend, then the frontend.
@@ -221,7 +237,37 @@ The frontend's Axios base URL (`src/api/api.js`) and the backend's CORS `origin`
 
 ---
 
-## 7. Known Limitations
+## 7. Deployment
+
+A minimal free-tier setup: **MongoDB Atlas** (database) + **Render** (backend) + **Vercel** (frontend). Having a live URL is useful for real PageSpeed Insights data (lab data from a local machine differs from what Google's servers measure against a live host).
+
+### 1. MongoDB Atlas
+1. Create a free M0 cluster at [mongodb.com/atlas](https://www.mongodb.com/atlas).
+2. Create a database user and password.
+3. Network Access → allow access from anywhere (`0.0.0.0/0`) for simplicity, or Render's specific IPs if you want it tighter.
+4. Copy the connection string — this is your production `MONGODB_URI` (append a database name, e.g. `/pg_hostel`, before the `?` query string).
+
+### 2. Backend on Render
+1. New → Web Service, point it at this repo, root directory `backend`.
+2. Build command: `npm install`. Start command: `npm start`.
+3. Environment variables: `MONGODB_URI` (from Atlas), `JWT_SECRET` (a long random string), `CLIENT_ORIGIN` (fill in after step 3, once you have the Vercel URL), `PORT` is set by Render automatically.
+4. Deploy, then note the resulting URL (e.g. `https://your-app.onrender.com`).
+
+### 3. Frontend on Vercel
+1. New Project, point it at this repo, root directory `frontend`.
+2. Framework preset: Vite. Build command: `npm run build`. Output directory: `dist`.
+3. Environment variable: `VITE_API_URL` = `https://your-app.onrender.com/api` (must be set **before** the build runs, since Vite bakes it into the bundle).
+4. Deploy, then note the resulting URL (e.g. `https://your-app.vercel.app`).
+
+### 4. Close the loop
+Go back to Render and set `CLIENT_ORIGIN` to your Vercel URL, then redeploy the backend so CORS allows it.
+
+### 5. Seed the live database (optional)
+Run `MONGODB_URI=<your Atlas URI> npm run seed` locally (pointed at Atlas instead of localhost) so the live site has content to demo and measure.
+
+---
+
+## 8. Known Limitations
 
 These are useful to know before extending the app — noted here rather than fixed silently, since some may be deliberate simplifications for a coursework project:
 
@@ -229,11 +275,10 @@ These are useful to know before extending the app — noted here rather than fix
 - **`roleMiddleware.js` is unused.** Role checks are duplicated inline in each controller instead of composed via `requireRole()` in the route definitions.
 - **Renter inquiry inbox not surfaced in the UI.** `GET /api/inquiries` (list inquiries for a renter's properties) and `PUT /api/inquiries/:id/status` are implemented on the backend and in `src/api/inquiries.js`, but `RenterDashboard.jsx` only lists properties — there's no screen consuming `fetchOwnerInquiries`/`updateInquiryStatus` yet.
 - **No ownership check on inquiry status updates.** `inquiryController.updateStatus` doesn't verify the requester actually owns the property tied to the inquiry.
-- **Hardcoded URLs.** API base URL and CORS origin are hardcoded rather than driven by environment variables, so deploying beyond localhost requires manual edits in both apps.
 
 ---
 
-## 8. Scripts Reference
+## 9. Scripts Reference
 
 **Backend** (`backend/package.json`)
 - `npm start` — run once with plain `node`
