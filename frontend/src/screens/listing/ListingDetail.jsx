@@ -179,7 +179,8 @@
               
               {
                 !canInquire
-                && (prop.owner._id == user.id) 
+                && user
+                && (prop.owner._id === user.id)
                   && (
                     <button
                     onClick={() => setShowEditPropertyModal(true)}
