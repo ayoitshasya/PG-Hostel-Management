@@ -141,8 +141,18 @@ export default function CreateListing() {
       title: title.trim(),
       description: description.trim(),
       propertyType,
-      targetAudience,
-      furnishing,
+      // Both selects have an unselected "" default and neither is
+      // enforced as required by validateStep(), but the Property model's
+      // enum validation rejects "" outright (it's a defined value, not
+      // absent, so it still gets checked against the enum and fails -
+      // found by an E2E test that didn't bother picking a furnishing
+      // option, exactly like a real user might not). Sending undefined
+      // instead of "" makes the field genuinely absent from the request
+      // body, so furnishing falls back to the schema's 'unfurnished'
+      // default and targetAudience is simply left unset, instead of
+      // both erroring out.
+      targetAudience: targetAudience || undefined,
+      furnishing: furnishing || undefined,
       petsAllowed,
       mealsProvided,
       amenities: selectedAmenities,
