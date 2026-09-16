@@ -47,10 +47,10 @@ export default function EditPropertyModal({ isOpen, onClose, property, onSuccess
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Property">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="text-sm text-red-600" role="alert">{error}</div>}
+        {error && <div className="text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
 
         <div>
-          <label htmlFor="edit-title" className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="edit-title" className="block text-sm font-medium text-fg mb-2">
             Property Name
           </label>
           <input
@@ -58,12 +58,12 @@ export default function EditPropertyModal({ isOpen, onClose, property, onSuccess
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-sky-200 focus:outline-none"
+            className="w-full bg-surface text-fg border border-border rounded-sm px-4 py-3 focus:ring-2 focus:ring-accent/40 focus:border-accent focus:outline-none"
           />
         </div>
 
         <div>
-          <label htmlFor="edit-description" className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="edit-description" className="block text-sm font-medium text-fg mb-2">
             Description
           </label>
           <textarea
@@ -71,13 +71,13 @@ export default function EditPropertyModal({ isOpen, onClose, property, onSuccess
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows="4"
-            className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-sky-200 focus:outline-none"
+            className="w-full bg-surface text-fg border border-border rounded-sm px-4 py-3 focus:ring-2 focus:ring-accent/40 focus:border-accent focus:outline-none"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="edit-price" className="block text-sm font-medium text-slate-700 mb-2">
+            <label htmlFor="edit-price" className="block text-sm font-medium text-fg mb-2">
               Price (per month)
             </label>
             <input
@@ -85,19 +85,19 @@ export default function EditPropertyModal({ isOpen, onClose, property, onSuccess
               type="number"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-sky-200 focus:outline-none"
+              className="w-full bg-surface text-fg border border-border rounded-sm px-4 py-3 focus:ring-2 focus:ring-accent/40 focus:border-accent focus:outline-none"
             />
           </div>
 
           <div>
-            <label htmlFor="edit-status" className="block text-sm font-medium text-slate-700 mb-2">
+            <label htmlFor="edit-status" className="block text-sm font-medium text-fg mb-2">
               Status
             </label>
             <select
               id="edit-status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-sky-200 focus:outline-none"
+              className="w-full bg-surface text-fg border border-border rounded-sm px-4 py-3 focus:ring-2 focus:ring-accent/40 focus:border-accent focus:outline-none"
             >
               <option value="available">Available</option>
               <option value="rented">Rented</option>
@@ -110,14 +110,14 @@ export default function EditPropertyModal({ isOpen, onClose, property, onSuccess
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+            className="flex-1 px-4 py-2 border border-border rounded-sm text-fg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-primary-dark text-white rounded-lg hover:bg-primary disabled:opacity-50"
+            className="flex-1 px-4 py-2 bg-accent text-accent-fg rounded-sm hover:bg-accent-hover disabled:opacity-50 transition-colors"
           >
             {loading ? "Saving..." : "Save Changes"}
           </button>

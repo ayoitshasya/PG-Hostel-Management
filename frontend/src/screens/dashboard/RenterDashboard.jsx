@@ -17,20 +17,20 @@ export default function RenterDashboard(){
   }, [user]);
 
   return (
-    <div className="min-h-[70vh] max-w-6xl mx-auto px-6 py-10">
-      <Seo title="My Listings" noindex />
-      <div className="container-centered py-10">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">My Listings</h1>
-        <Link to="/create-listing" className="text-sm bg-primary-dark text-white px-3 py-2 rounded">Create listing</Link>
-      </div>
+    <div className="min-h-[70vh] bg-bg text-fg">
+      <div className="max-w-6xl mx-auto px-6 py-10">
+        <Seo title="My Listings" noindex />
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">My Listings</h1>
+          <Link to="/create-listing" className="text-sm bg-accent text-accent-fg hover:bg-accent-hover px-3 py-2 rounded-sm transition-colors">Create listing</Link>
+        </div>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {propsList.map(p => (
-          <ListingCard key={p._id} property={p} headingLevel={2} />
-        ))}
+        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {propsList.map(p => (
+            <ListingCard key={p._id} property={p} headingLevel={2} />
+          ))}
+        </div>
       </div>
-    </div>
     </div>
   );
 }

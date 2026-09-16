@@ -202,46 +202,49 @@ export default function CreateListing() {
   }
 
   return (
-    <div className="min-h-[70vh] max-w-6xl mx-auto px-6 py-10">
+    <div className="min-h-screen bg-bg text-fg">
+      <div className="max-w-6xl mx-auto px-6 py-10">
       <Seo title="List Your Property" description="List your PG, hostel, or apartment on Roomie in a few steps." noindex />
       <div className="mb-6">
         <h1 className="text-3xl font-bold">List Your Property</h1>
-        <p className="text-sm text-slate-500 mt-1">Fill details about your property in a few steps</p>
+        <p className="text-sm text-fg-secondary mt-1">Fill details about your property in a few steps</p>
       </div>
 
-      {/* Stepper */}
-      <ol className="flex items-center gap-6 border-b border-slate-100 pb-4 mb-6" aria-label="Form steps">
+      {/* Stepper - circular step markers are a genuine "current position on
+          a numbered sequence" indicator, not a decorative rounded-full
+          default, so they keep rounded-full. */}
+      <ol className="flex items-center gap-6 border-b border-border pb-4 mb-6" aria-label="Form steps">
         {steps.map((s, i) => (
           <li key={s} className="flex items-center gap-3" aria-current={i === step ? "step" : undefined}>
             <div
               aria-hidden="true"
               className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold
-                ${i === step ? "bg-primary-dark text-white" : i < step ? "bg-slate-200 text-slate-700" : "bg-white text-slate-500 border border-slate-200"}`}
+                ${i === step ? "bg-accent text-accent-fg" : i < step ? "bg-neutral-200 dark:bg-neutral-700 text-fg" : "bg-surface text-fg-secondary border border-border"}`}
             >
               {i + 1}
             </div>
-            <div className={`text-sm ${i === step ? "text-primary-dark font-medium" : "text-slate-600"}`}>{s}</div>
+            <div className={`text-sm ${i === step ? "text-accent font-medium" : "text-fg-secondary"}`}>{s}</div>
           </li>
         ))}
       </ol>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6">
+      <form onSubmit={handleSubmit} className="bg-surface rounded-md shadow p-6">
         {/* Error / Success */}
-        {error && <div className="mb-4 text-sm text-red-600" role="alert">{error}</div>}
-        {successMsg && <div className="mb-4 text-sm text-green-700" role="status">{successMsg}</div>}
+        {error && <div className="mb-4 text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
+        {successMsg && <div className="mb-4 text-sm text-green-700 dark:text-green-400" role="status">{successMsg}</div>}
 
         {/* Step content */}
         {step === 0 && (
           <div className="space-y-4">
             <label className="block">
-              <div className="text-sm font-medium text-slate-700">Property Name</div>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Cozy Student Residence" className="mt-2 w-full border border-slate-200 rounded-md px-4 py-3 focus:ring-2 focus:ring-sky-200" />
+              <div className="text-sm font-medium text-fg">Property Name</div>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Cozy Student Residence" className="mt-2 w-full bg-surface text-fg border border-border rounded-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
             </label>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label>
-                <div className="text-sm font-medium text-slate-700">Property Type</div>
-                <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className="mt-2 w-full border border-slate-200 rounded-md px-3 py-3">
+                <div className="text-sm font-medium text-fg">Property Type</div>
+                <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className="mt-2 w-full bg-surface text-fg border border-border rounded-sm px-3 py-3 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
                   <option value="">Select Property Type</option>
                   {options.propertyTypes.map((t) => (
                     <option key={t} value={t}>{t}</option>
@@ -250,8 +253,8 @@ export default function CreateListing() {
               </label>
 
               <label>
-                <div className="text-sm font-medium text-slate-700">Target Audience</div>
-                <select value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} className="mt-2 w-full border border-slate-200 rounded-md px-3 py-3">
+                <div className="text-sm font-medium text-fg">Target Audience</div>
+                <select value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} className="mt-2 w-full bg-surface text-fg border border-border rounded-sm px-3 py-3 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
                   <option value="">Select Target Audience</option>
                   {options.audiences.map((a) => (
                     <option key={a.value} value={a.value}>{a.label}</option>
@@ -261,29 +264,29 @@ export default function CreateListing() {
             </div>
 
             <label className="block">
-              <div className="text-sm font-medium text-slate-700">Property Description</div>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your property in detail" rows="6" className="mt-2 w-full border border-slate-200 rounded-md px-4 py-3 focus:ring-2 focus:ring-sky-200" />
+              <div className="text-sm font-medium text-fg">Property Description</div>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your property in detail" rows="6" className="mt-2 w-full bg-surface text-fg border border-border rounded-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
             </label>
           </div>
         )}
 
         {step === 1 && (
           <div className="space-y-4">
-            <div className="text-sm text-slate-700 font-medium">Amenities</div>
-            {optionsLoading && <div className="text-sm text-slate-500">Loading amenities...</div>}
+            <div className="text-sm text-fg font-medium">Amenities</div>
+            {optionsLoading && <div className="text-sm text-fg-secondary">Loading amenities...</div>}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
               {options.amenities.map(a => (
-                <label key={a.value} className="flex items-center gap-3 bg-slate-50 rounded-md px-3 py-2 border border-transparent hover:border-slate-200 cursor-pointer">
+                <label key={a.value} className="flex items-center gap-3 bg-neutral-100 dark:bg-neutral-800 rounded-sm px-3 py-2 border border-transparent hover:border-border cursor-pointer">
                   <input type="checkbox" checked={selectedAmenities.includes(a.value)} onChange={() => toggleAmenity(a.value)} />
-                  <span className="text-sm text-slate-700">{a.label}</span>
+                  <span className="text-sm text-fg">{a.label}</span>
                 </label>
               ))}
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-4">
               <label>
-                <div className="text-sm font-medium text-slate-700">Furnishing</div>
-                <select value={furnishing} onChange={(e) => setFurnishing(e.target.value)} className="mt-2 w-full border border-slate-200 rounded-md px-3 py-3">
+                <div className="text-sm font-medium text-fg">Furnishing</div>
+                <select value={furnishing} onChange={(e) => setFurnishing(e.target.value)} className="mt-2 w-full bg-surface text-fg border border-border rounded-sm px-3 py-3 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
                   <option value="">Select Furnishing</option>
                   {options.furnishing.map((f) => (
                     <option key={f.value} value={f.value}>{f.label}</option>
@@ -292,8 +295,8 @@ export default function CreateListing() {
               </label>
 
               <label>
-                <div className="text-sm font-medium text-slate-700">Meals Provided</div>
-                <select value={mealsProvided ? "yes" : "no"} onChange={(e) => setMealsProvided(e.target.value === "yes")} className="mt-2 w-full border border-slate-200 rounded-md px-3 py-3">
+                <div className="text-sm font-medium text-fg">Meals Provided</div>
+                <select value={mealsProvided ? "yes" : "no"} onChange={(e) => setMealsProvided(e.target.value === "yes")} className="mt-2 w-full bg-surface text-fg border border-border rounded-sm px-3 py-3 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
                   <option value="no">No</option>
                   <option value="yes">Yes</option>
                 </select>
@@ -303,7 +306,7 @@ export default function CreateListing() {
             <div className="flex items-center gap-4 mt-4">
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={petsAllowed} onChange={(e) => setPetsAllowed(e.target.checked)} />
-                <span className="text-sm text-slate-700">Pets Allowed</span>
+                <span className="text-sm text-fg">Pets Allowed</span>
               </label>
             </div>
           </div>
@@ -312,18 +315,18 @@ export default function CreateListing() {
         {step === 2 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-slate-700">Rooms & Pricing</div>
-              <button type="button" onClick={addRoom} className="text-sm bg-primary-dark text-white px-3 py-1 rounded">Add Room</button>
+              <div className="text-sm font-medium text-fg">Rooms & Pricing</div>
+              <button type="button" onClick={addRoom} className="text-sm bg-accent text-accent-fg hover:bg-accent-hover px-3 py-1 rounded-sm transition-colors">Add Room</button>
             </div>
 
             <div className="space-y-4">
               {rooms.map((r, i) => (
-                <fieldset key={i} className="border border-slate-100 p-4 rounded-md">
+                <fieldset key={i} className="border border-border p-4 rounded-sm">
                   <legend className="flex items-center justify-between w-full px-0">
-                    <span className="font-medium">Room {i + 1}</span>
+                    <span className="font-medium text-fg">Room {i + 1}</span>
                   </legend>
                   <div className="flex justify-end -mt-8 mb-2">
-                    <button type="button" onClick={() => removeRoom(i)} className="text-sm text-red-600">
+                    <button type="button" onClick={() => removeRoom(i)} className="text-sm text-red-600 dark:text-red-400">
                       Remove room {i + 1}
                     </button>
                   </div>
@@ -331,26 +334,26 @@ export default function CreateListing() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                     <label className="block">
                       <span className="sr-only">Room {i + 1} name</span>
-                      <input value={r.name} onChange={(e) => updateRoom(i, { name: e.target.value })} className="w-full border border-slate-200 rounded px-3 py-2" placeholder="Room name (A1)" />
+                      <input value={r.name} onChange={(e) => updateRoom(i, { name: e.target.value })} className="w-full bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" placeholder="Room name (A1)" />
                     </label>
                     <label className="block">
                       <span className="sr-only">Room {i + 1} price per month</span>
-                      <input value={r.price} onChange={(e) => updateRoom(i, { price: e.target.value })} className="w-full border border-slate-200 rounded px-3 py-2" placeholder="Price per month" />
+                      <input value={r.price} onChange={(e) => updateRoom(i, { price: e.target.value })} className="w-full bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" placeholder="Price per month" />
                     </label>
                     <label className="block">
                       <span className="sr-only">Room {i + 1} occupancy</span>
-                      <input value={r.occupancy} onChange={(e) => updateRoom(i, { occupancy: e.target.value })} type="number" className="w-full border border-slate-200 rounded px-3 py-2" placeholder="Occupancy" />
+                      <input value={r.occupancy} onChange={(e) => updateRoom(i, { occupancy: e.target.value })} type="number" className="w-full bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" placeholder="Occupancy" />
                     </label>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                     <label className="block">
                       <span className="sr-only">Room {i + 1} available from</span>
-                      <input value={r.availableFrom} onChange={(e) => updateRoom(i, { availableFrom: e.target.value })} type="date" className="w-full border border-slate-200 rounded px-3 py-2" />
+                      <input value={r.availableFrom} onChange={(e) => updateRoom(i, { availableFrom: e.target.value })} type="date" className="w-full bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
                     </label>
                     <label className="block">
                       <span className="sr-only">Room {i + 1} status</span>
-                      <select value={r.status} onChange={(e) => updateRoom(i, { status: e.target.value })} className="w-full border border-slate-200 rounded px-3 py-2">
+                      <select value={r.status} onChange={(e) => updateRoom(i, { status: e.target.value })} className="w-full bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
                         <option value="available">Available</option>
                         <option value="booked">Booked</option>
                         <option value="unavailable">Unavailable</option>
@@ -363,8 +366,8 @@ export default function CreateListing() {
 
             <div className="mt-4">
               <label className="block">
-                <span className="text-sm font-medium text-slate-700">Default Price (optional)</span>
-                <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Default price e.g. 6000" className="mt-2 w-48 border border-slate-200 rounded px-3 py-2" />
+                <span className="text-sm font-medium text-fg">Default Price (optional)</span>
+                <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Default price e.g. 6000" className="mt-2 w-48 bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </label>
             </div>
           </div>
@@ -373,21 +376,24 @@ export default function CreateListing() {
         {step === 3 && (
           <div className="space-y-4">
             <div>
-              <label htmlFor="photo-url-input" className="text-sm font-medium text-slate-700">Add Photos (URLs)</label>
+              <label htmlFor="photo-url-input" className="text-sm font-medium text-fg">Add Photos (URLs)</label>
               <div className="flex gap-2 mt-2">
-                <input placeholder="https://..." className="flex-1 border border-slate-200 rounded px-3 py-2" id="photo-url-input" />
+                <input placeholder="https://..." className="flex-1 bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" id="photo-url-input" />
                 <button type="button" onClick={()=>{
                   const el = document.getElementById("photo-url-input");
                   if(el?.value) {
                     addPhotoUrl(el.value.trim());
                     el.value = "";
                   }
-                }} className="px-3 py-2 bg-slate-800 text-white rounded">Add</button>
+                }} className="px-3 py-2 bg-fg text-bg rounded-sm hover:opacity-90 transition-opacity">Add</button>
               </div>
               <div className="mt-3 flex flex-wrap gap-3">
                 {photoUrls.map((u, idx) => (
-                  <div key={idx} className="w-28 h-20 rounded overflow-hidden relative border">
+                  <div key={idx} className="w-28 h-20 rounded-sm overflow-hidden relative border border-border">
                     <img src={u} alt={`photo-${idx}`} className="w-full h-full object-cover" />
+                    {/* Small circular icon-button overlaying a thumbnail - a
+                        genuine circle, not a default pill shape, so
+                        rounded-full stays here. */}
                     <button onClick={() => removePhotoUrl(idx)} className="absolute top-1 right-1 bg-white/80 rounded-full p-0.5 text-xs">✕</button>
                   </div>
                 ))}
@@ -395,7 +401,7 @@ export default function CreateListing() {
             </div>
 
             <div>
-              <label htmlFor="photo-file-input" className="text-sm font-medium text-slate-700">Upload photos</label>
+              <label htmlFor="photo-file-input" className="text-sm font-medium text-fg">Upload photos</label>
               <input
                 id="photo-file-input"
                 type="file"
@@ -408,25 +414,25 @@ export default function CreateListing() {
 
               {uploading && (
                 <div className="mt-3" role="status" aria-live="polite">
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary-dark transition-all"
+                      className="h-full bg-accent transition-all"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">Uploading... {uploadProgress}%</div>
+                  <div className="text-xs text-fg-secondary mt-1">Uploading... {uploadProgress}%</div>
                 </div>
               )}
 
               {uploadError && (
-                <div className="text-sm text-red-600 mt-2" role="alert">{uploadError}</div>
+                <div className="text-sm text-red-600 dark:text-red-400 mt-2" role="alert">{uploadError}</div>
               )}
 
               <div className="mt-3 flex flex-wrap gap-3">
                 {uploadedAssets.map((asset, idx) => {
                   const smallest = [...asset.variants].sort((a, b) => a.width - b.width)[0];
                   return (
-                    <div key={idx} className="w-28 h-20 rounded overflow-hidden relative border">
+                    <div key={idx} className="w-28 h-20 rounded-sm overflow-hidden relative border border-border">
                       <img src={smallest.url} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
                       <button
                         type="button"
@@ -440,7 +446,7 @@ export default function CreateListing() {
                   );
                 })}
               </div>
-              <div className="text-xs text-slate-500 mt-2">
+              <div className="text-xs text-fg-secondary mt-2">
                 JPEG, PNG, or WebP, up to {MAX_UPLOAD_MB}MB each. Resized and optimized automatically.
               </div>
             </div>
@@ -451,8 +457,8 @@ export default function CreateListing() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label>
-                <div className="text-sm font-medium text-slate-700">City</div>
-                <select value={city} onChange={(e) => setCity(e.target.value)} className="mt-2 w-full border border-slate-200 rounded-md px-3 py-3">
+                <div className="text-sm font-medium text-fg">City</div>
+                <select value={city} onChange={(e) => setCity(e.target.value)} className="mt-2 w-full bg-surface text-fg border border-border rounded-sm px-3 py-3 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
                   <option value="">Select City</option>
                   {options.cities.map((c) => (
                     <option key={c} value={c}>{c}</option>
@@ -460,30 +466,30 @@ export default function CreateListing() {
                 </select>
               </label>
               <label>
-                <div className="text-sm font-medium text-slate-700">Address</div>
-                <input value={address} onChange={(e)=>setAddress(e.target.value)} placeholder="Near X, City" className="mt-2 w-full border border-slate-200 rounded px-3 py-2" />
+                <div className="text-sm font-medium text-fg">Address</div>
+                <input value={address} onChange={(e)=>setAddress(e.target.value)} placeholder="Near X, City" className="mt-2 w-full bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </label>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label>
-                <div className="text-sm font-medium text-slate-700">Google Maps URL</div>
-                <input value={googleMapsUrl} onChange={(e)=>setGoogleMapsUrl(e.target.value)} placeholder="https://maps.google.com/..." className="mt-2 w-full border border-slate-200 rounded px-3 py-2" />
+                <div className="text-sm font-medium text-fg">Google Maps URL</div>
+                <input value={googleMapsUrl} onChange={(e)=>setGoogleMapsUrl(e.target.value)} placeholder="https://maps.google.com/..." className="mt-2 w-full bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </label>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <label className="block">
                 <span className="sr-only">Latitude</span>
-                <input value={lat} onChange={e=>setLat(e.target.value)} placeholder="Latitude" className="w-full border border-slate-200 rounded px-3 py-2" />
+                <input value={lat} onChange={e=>setLat(e.target.value)} placeholder="Latitude" className="w-full bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </label>
               <label className="block">
                 <span className="sr-only">Longitude</span>
-                <input value={lng} onChange={e=>setLng(e.target.value)} placeholder="Longitude" className="w-full border border-slate-200 rounded px-3 py-2" />
+                <input value={lng} onChange={e=>setLng(e.target.value)} placeholder="Longitude" className="w-full bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
               </label>
               <label className="block">
                 <span className="sr-only">Listing status</span>
-                <select value={status} onChange={e=>setStatus(e.target.value)} className="w-full border border-slate-200 rounded px-3 py-2">
+                <select value={status} onChange={e=>setStatus(e.target.value)} className="w-full bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
                   {options.statuses.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
@@ -493,8 +499,8 @@ export default function CreateListing() {
 
             <div className="flex items-center gap-4 mt-2">
               <label className="flex items-center gap-4">
-                <span className="text-sm font-medium">Currency</span>
-                <select value={currency} onChange={(e)=>setCurrency(e.target.value)} className="border border-slate-200 rounded px-3 py-2">
+                <span className="text-sm font-medium text-fg">Currency</span>
+                <select value={currency} onChange={(e)=>setCurrency(e.target.value)} className="bg-surface text-fg border border-border rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent">
                   <option value="INR">INR</option>
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -507,20 +513,21 @@ export default function CreateListing() {
         {/* Navigation buttons */}
         <div className="mt-6 flex items-center justify-between">
           <div>
-            {step > 0 && <button type="button" onClick={handleBack} className="px-4 py-2 border rounded-md">Back</button>}
+            {step > 0 && <button type="button" onClick={handleBack} className="px-4 py-2 border border-border rounded-sm text-fg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">Back</button>}
           </div>
 
           <div className="flex items-center gap-3">
             {step < steps.length - 1 ? (
-              <button type="button" onClick={handleNext} className="px-5 py-2 bg-primary-dark text-white rounded-md">Next</button>
+              <button type="button" onClick={handleNext} className="px-5 py-2 bg-accent text-accent-fg hover:bg-accent-hover rounded-sm transition-colors">Next</button>
             ) : (
-              <button type="submit" disabled={loading} className="px-5 py-2 bg-primary-dark text-white rounded-md">
+              <button type="submit" disabled={loading} className="px-5 py-2 bg-accent text-accent-fg hover:bg-accent-hover rounded-sm disabled:opacity-50 transition-colors">
                 {loading ? "Creating..." : "Create listing"}
               </button>
             )}
           </div>
         </div>
       </form>
+      </div>
     </div>
   );
 }

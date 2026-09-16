@@ -11,13 +11,13 @@ export default function NotFound() {
           signal available to tell a crawler this page has no content;
           it can't correct the status code from here. */}
       <Seo title="Page Not Found" noindex />
-      <h1 className="text-6xl font-bold text-slate-900 mb-4">404</h1>
-      <p className="text-xl text-slate-600 mb-8">
+      <h1 className="text-6xl font-bold mb-4">404</h1>
+      <p className="text-xl text-fg-secondary mb-8">
         The page you are looking for doesn't exist.
       </p>
       <Link
         to="/"
-        className="px-6 py-3 bg-primary-dark text-white rounded-lg hover:bg-primary transition"
+        className="px-6 py-3 bg-accent text-accent-fg hover:bg-accent-hover rounded-sm transition-colors"
       >
         Back to Home
       </Link>

@@ -27,7 +27,7 @@ const TenantDashboard = lazy(() => import('./screens/dashboard/TenantDashboard')
 
 function RouteFallback() {
   return (
-    <div className="flex justify-center items-center h-[70vh] text-gray-500">
+    <div className="flex justify-center items-center h-[70vh] text-fg-secondary">
       Loading...
     </div>
   );
@@ -38,7 +38,7 @@ export default function App(){
     <BrowserRouter>
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:text-slate-900 focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-surface focus:text-fg focus:px-4 focus:py-2 focus:rounded-sm focus:shadow-lg"
       >
         Skip to main content
       </a>

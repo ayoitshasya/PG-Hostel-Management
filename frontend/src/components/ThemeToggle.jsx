@@ -46,14 +46,7 @@ export default function ThemeToggle() {
       aria-pressed={isDark}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      // Styled to match Header's current (pre-redesign) light-only
-      // palette, not the new --fg/--border semantic tokens - Header itself
-      // isn't migrated until Step 2, and stays a hardcoded white bg
-      // regardless of the .dark class this button toggles. Using the new
-      // tokens here would flip this icon to light-on-light and make it
-      // vanish against Header's still-white background whenever dark mode
-      // is active. Update this alongside Header in Step 2.
-      className="flex items-center justify-center w-8 h-8 rounded-md border border-gray-200 text-gray-600 hover:text-primary-dark hover:border-primary-dark transition-colors"
+      className="flex items-center justify-center w-8 h-8 rounded-sm border border-border text-fg-secondary hover:text-accent hover:border-accent transition-colors"
     >
       {isDark ? <SunIcon /> : <MoonIcon />}
     </button>

@@ -31,10 +31,10 @@ export default function InquiryModal({ isOpen, onClose, propertyId, onSuccess })
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Send Inquiry">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && <div className="text-sm text-red-600" role="alert">{error}</div>}
+        {error && <div className="text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
 
         <div>
-          <label htmlFor="inquiry-message" className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="inquiry-message" className="block text-sm font-medium text-fg mb-2">
             Your Message
           </label>
           <textarea
@@ -43,7 +43,7 @@ export default function InquiryModal({ isOpen, onClose, propertyId, onSuccess })
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Hi, I'm interested in this property..."
             rows="5"
-            className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-sky-200 focus:outline-none"
+            className="w-full bg-surface text-fg border border-border rounded-sm px-4 py-3 focus:ring-2 focus:ring-accent/40 focus:border-accent focus:outline-none"
           />
         </div>
 
@@ -51,14 +51,14 @@ export default function InquiryModal({ isOpen, onClose, propertyId, onSuccess })
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+            className="flex-1 px-4 py-2 border border-border rounded-sm text-fg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-primary-dark text-white rounded-lg hover:bg-primary disabled:opacity-50"
+            className="flex-1 px-4 py-2 bg-accent text-accent-fg rounded-sm hover:bg-accent-hover disabled:opacity-50 transition-colors"
           >
             {loading ? "Sending..." : "Send Inquiry"}
           </button>

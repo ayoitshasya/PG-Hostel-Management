@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-200 text-center py-6 text-sm text-gray-500">
+    <footer className="bg-surface border-t border-border text-center py-6 text-sm text-fg-secondary">
       <div className="flex justify-center space-x-6 mb-2">
         <Link to="/privacy" className="hover:underline">
           Privacy Policy

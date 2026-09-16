@@ -30,18 +30,29 @@ export default function ListingCard({ property, priority = false, headingLevel =
   const subtitle = property.description || property.propertyType || "";
 
   return (
+    // `group` lets the image react to hover/focus on the whole card (the
+    // Link IS the card - there's no separate wrapper to hang the state on).
+    // The single interaction spec'd for this card: image scales slightly
+    // within its clipped frame, the card gains elevation and an
+    // accent-tinted border - on hover AND keyboard focus identically
+    // (group-focus-visible, not group-focus, so it doesn't fire on a mouse
+    // click that happens to focus the link). border-transparent at rest
+    // keeps the border reserved in layout, so it appearing on hover/focus
+    // doesn't shift anything. The scale transform is the only piece gated
+    // behind motion-safe: - a shadow/border change isn't the kind of
+    // motion prefers-reduced-motion is about, but scaling content is.
     <Link
       to={`/listing/${property._id}`}
-      className="block bg-surface rounded-md shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all overflow-hidden"
+      className="group block bg-surface rounded-md border border-transparent shadow-sm hover:shadow-md hover:border-accent focus-visible:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-[box-shadow,border-color] duration-200 overflow-hidden"
     >
-      <div className="w-full h-44 md:h-40 lg:h-44 bg-neutral-100 dark:bg-neutral-800">
+      <div className="w-full h-44 md:h-40 lg:h-44 bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
         {photo && !imgError ? (
           <img
             src={photo.src}
             srcSet={photo.srcSet}
             sizes={photo.srcSet ? CARD_SIZES : undefined}
             alt={property.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105"
             width="640"
             height="352"
             loading={priority ? "eager" : "lazy"}

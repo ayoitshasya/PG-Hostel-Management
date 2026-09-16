@@ -46,7 +46,7 @@
 
     if (!prop) {
       return (
-        <div className="flex justify-center items-center h-[70vh] text-gray-500">
+        <div className="flex justify-center items-center h-[70vh] bg-bg text-fg-secondary">
           Property not found
         </div>
       );
@@ -65,192 +65,194 @@
           image={photo?.src}
           url={typeof window !== "undefined" ? window.location.href : undefined}
         />
-        <div className="max-w-7xl mx-auto px-6 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 bg-white rounded-2xl shadow overflow-hidden">
-              {photo && !heroImgError ? (
-                <div className="w-full aspect-[8/5]">
-                  <img
-                    src={photo.src}
-                    srcSet={photo.srcSet}
-                    sizes={photo.srcSet ? HERO_SIZES : undefined}
-                    alt={prop.title}
-                    className="w-full h-full object-cover"
-                    width={photo.width || 1600}
-                    height={photo.height || 1000}
-                    loading="eager"
-                    fetchPriority="high"
-                    decoding="async"
-                    onError={() => setHeroImgError(true)}
-                  />
-                </div>
-              ) : (
-                <div className="w-full aspect-[8/5] bg-gray-100 flex items-center justify-center text-gray-500">
-                  No Image Available
-                </div>
-              )}
-
-              <div className="p-6">
-                <div className="flex flex-wrap items-center justify-between mb-4">
-                  <h1 className="text-3xl font-bold text-gray-900">{prop.title}</h1>
-                  <div className="flex gap-2 mt-2">
-                    {prop.propertyType && (
-                      <span className="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-medium">
-                        {prop.propertyType}
-                      </span>
-                    )}
-                    {prop.targetAudience && (
-                      <span className="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-medium capitalize">
-                        {prop.targetAudience}
-                      </span>
-                    )}
+        <div className="min-h-screen bg-bg text-fg">
+          <div className="max-w-7xl mx-auto px-6 py-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 bg-surface rounded-md shadow overflow-hidden">
+                {photo && !heroImgError ? (
+                  <div className="w-full aspect-[8/5]">
+                    <img
+                      src={photo.src}
+                      srcSet={photo.srcSet}
+                      sizes={photo.srcSet ? HERO_SIZES : undefined}
+                      alt={prop.title}
+                      className="w-full h-full object-cover"
+                      width={photo.width || 1600}
+                      height={photo.height || 1000}
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                      onError={() => setHeroImgError(true)}
+                    />
                   </div>
-                </div>
-
-                <p className="mt-3 text-gray-600 leading-relaxed">
-                  {prop.description || "No description provided."}
-                </p>
-
-                <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
-                  <div>
-                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Price</h2>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {prop.price ? `₹${prop.price} / month` : "Contact for price"}
-                    </p>
+                ) : (
+                  <div className="w-full aspect-[8/5] bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-fg-secondary">
+                    No Image Available
                   </div>
+                )}
 
-                  <div>
-                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Furnishing</h2>
-                    <p className="capitalize text-gray-700">
-                      {prop.furnishing || "—"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Meals</h2>
-                    <p className="capitalize text-gray-700">
-                      {prop.mealsProvided ? "Included" : "Not included"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Pets</h2>
-                    <p className="capitalize text-gray-700">
-                      {prop.petsAllowed ? "Allowed" : "Not allowed"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Status</h2>
-                    <p
-                      className={`capitalize font-medium ${
-                        prop.status === "available"
-                          ? "text-green-700"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {prop.status || "—"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-gray-500 font-medium mb-1 text-sm">Rooms</h2>
-                    <p className="text-gray-700">{prop.totalRooms || "—"}</p>
-                  </div>
-                </div>
-
-                <div className="mt-8">
-                  <h2 className="text-gray-700 font-semibold mb-3">Amenities</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {prop.amenities && prop.amenities.length > 0 ? (
-                      prop.amenities.map((a) => (
-                        <span
-                          key={a}
-                          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs"
-                        >
-                          {amenityLabel(options, a)}
+                <div className="p-6">
+                  <div className="flex flex-wrap items-center justify-between mb-4">
+                    <h1 className="text-3xl font-bold">{prop.title}</h1>
+                    <div className="flex gap-2 mt-2">
+                      {prop.propertyType && (
+                        <span className="px-3 py-1 bg-accent-subtle text-accent-subtle-fg rounded-sm text-xs font-medium">
+                          {prop.propertyType}
                         </span>
-                      ))
-                    ) : (
-                      <span className="text-gray-500 text-sm">
-                        No amenities listed
-                      </span>
+                      )}
+                      {prop.targetAudience && (
+                        <span className="px-3 py-1 bg-neutral-100 dark:bg-neutral-800 text-fg-secondary rounded-sm text-xs font-medium capitalize">
+                          {prop.targetAudience}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="mt-3 text-fg-secondary leading-relaxed">
+                    {prop.description || "No description provided."}
+                  </p>
+
+                  <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
+                    <div>
+                      <h2 className="text-fg-secondary font-medium mb-1 text-sm">Price</h2>
+                      <p className="text-lg font-semibold text-fg">
+                        {prop.price ? `₹${prop.price} / month` : "Contact for price"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h2 className="text-fg-secondary font-medium mb-1 text-sm">Furnishing</h2>
+                      <p className="capitalize text-fg">
+                        {prop.furnishing || "—"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h2 className="text-fg-secondary font-medium mb-1 text-sm">Meals</h2>
+                      <p className="capitalize text-fg">
+                        {prop.mealsProvided ? "Included" : "Not included"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h2 className="text-fg-secondary font-medium mb-1 text-sm">Pets</h2>
+                      <p className="capitalize text-fg">
+                        {prop.petsAllowed ? "Allowed" : "Not allowed"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h2 className="text-fg-secondary font-medium mb-1 text-sm">Status</h2>
+                      <p
+                        className={`capitalize font-medium ${
+                          prop.status === "available"
+                            ? "text-green-700 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        {prop.status || "—"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h2 className="text-fg-secondary font-medium mb-1 text-sm">Rooms</h2>
+                      <p className="text-fg">{prop.totalRooms || "—"}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-8">
+                    <h2 className="text-fg font-semibold mb-3">Amenities</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {prop.amenities && prop.amenities.length > 0 ? (
+                        prop.amenities.map((a) => (
+                          <span
+                            key={a}
+                            className="bg-neutral-100 dark:bg-neutral-800 text-fg-secondary px-3 py-1 rounded-sm text-xs"
+                          >
+                            {amenityLabel(options, a)}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-fg-secondary text-sm">
+                          No amenities listed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-8">
+                    <h2 className="text-fg font-semibold mb-2">Location</h2>
+                    <p className="text-fg-secondary text-sm mb-3">
+                      {prop.location?.address || "Address not available"}
+                    </p>
+                    {prop.location?.googleMapsUrl && (
+                      <a
+                        href={prop.location.googleMapsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-block px-4 py-2 rounded-sm bg-accent hover:bg-accent-hover text-accent-fg text-sm transition-colors"
+                      >
+                        View on Google Maps
+                      </a>
                     )}
                   </div>
                 </div>
+              </div>
 
-                <div className="mt-8">
-                  <h2 className="text-gray-700 font-semibold mb-2">Location</h2>
-                  <p className="text-gray-600 text-sm mb-3">
-                    {prop.location?.address || "Address not available"}
-                  </p>
-                  {prop.location?.googleMapsUrl && (
-                    <a
-                      href={prop.location.googleMapsUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-block px-4 py-2 rounded-lg bg-primary-dark hover:bg-primary text-white text-sm transition"
+              <aside className="bg-surface rounded-md shadow p-6 h-fit">
+
+                {
+                  !canInquire
+                  && user
+                  && (prop.owner._id === user.id)
+                    && (
+                      <button
+                      onClick={() => setShowEditPropertyModal(true)}
+                      className="w-full py-3 rounded-sm bg-accent hover:bg-accent-hover text-accent-fg font-semibold transition-colors"
                     >
-                      View on Google Maps
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
+                      Edit Property
+                    </button>
+                    )
+                }
 
-            <aside className="bg-white rounded-2xl shadow p-6 h-fit">
-              
-              {
-                !canInquire
-                && user
-                && (prop.owner._id === user.id)
-                  && (
-                    <button
-                    onClick={() => setShowEditPropertyModal(true)}
-                    className="w-full py-3 rounded-lg bg-primary-dark hover:bg-primary text-white font-semibold transition"
+                <div className="bg-accent text-accent-fg rounded-md p-4 text-center my-6">
+                  <h2 className="text-lg font-semibold">Contact Renter</h2>
+                  <p className="text-sm mt-1 opacity-90">
+                    Interested? Send an inquiry!
+                  </p>
+                </div>
+
+                {prop.owner && (
+                  <div className="space-y-2 text-fg mb-6">
+                    <p className="font-medium">{prop.owner.name}</p>
+                    <p className="text-sm text-fg-secondary">{prop.owner.email}</p>
+                    {prop.owner.phone && (
+                      <p className="text-sm text-fg-secondary">{prop.owner.phone}</p>
+                    )}
+                  </div>
+                )}
+
+
+                {canInquire ? (
+                  <button
+                    onClick={() => setShowInquiryModal(true)}
+                    className="w-full py-3 rounded-sm bg-accent hover:bg-accent-hover text-accent-fg font-semibold transition-colors"
                   >
-                    Edit Property
+                    Send Inquiry
                   </button>
-                  )
-              }
-
-              <div className="bg-gradient-to-r from-primary-dark to-sky-700 text-white rounded-xl p-4 text-center my-6">
-                <h2 className="text-lg font-semibold">Contact Renter</h2>
-                <p className="text-sm mt-1 opacity-90">
-                  Interested? Send an inquiry!
-                </p>
-              </div>
-
-              {prop.owner && (
-                <div className="space-y-2 text-gray-700 mb-6">
-                  <p className="font-medium">{prop.owner.name}</p>
-                  <p className="text-sm text-gray-500">{prop.owner.email}</p>
-                  {prop.owner.phone && (
-                    <p className="text-sm text-gray-500">{prop.owner.phone}</p>
-                  )}
-                </div>
-              )}
-
-
-              {canInquire ? (
-                <button
-                  onClick={() => setShowInquiryModal(true)}
-                  className="w-full py-3 rounded-lg bg-primary-dark hover:bg-primary text-white font-semibold transition"
-                >
-                  Send Inquiry
-                </button>
-              ) : (
-                <div className="text-sm text-gray-500 text-center">
-                  {user ? (
-                    "Only tenants can send inquiries"
-                  ) : (
-                    <a href="/login" className="text-primary-dark hover:underline">
-                      Login to send inquiry
-                    </a>
-                  )}
-                </div>
-              )}
-            </aside>
+                ) : (
+                  <div className="text-sm text-fg-secondary text-center">
+                    {user ? (
+                      "Only tenants can send inquiries"
+                    ) : (
+                      <a href="/login" className="text-accent hover:underline">
+                        Login to send inquiry
+                      </a>
+                    )}
+                  </div>
+                )}
+              </aside>
+            </div>
           </div>
         </div>
 

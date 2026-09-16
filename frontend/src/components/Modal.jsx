@@ -67,14 +67,14 @@ export default function Modal({ isOpen, onClose, title, children }) {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="bg-white rounded-xl shadow-lg max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto focus:outline-none"
+        className="bg-surface text-fg rounded-md shadow-lg max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto focus:outline-none"
       >
-        <div className="flex items-center justify-between p-6 border-b">
-          <h3 id={titleId} className="text-xl font-semibold text-slate-900">{title}</h3>
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h3 id={titleId} className="text-xl font-semibold">{title}</h3>
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="text-slate-500 hover:text-slate-700 text-2xl leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-dark rounded"
+            className="text-fg-secondary hover:text-fg text-2xl leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
           >
             ×
           </button>

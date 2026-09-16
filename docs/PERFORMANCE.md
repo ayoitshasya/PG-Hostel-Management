@@ -1033,3 +1033,149 @@ better anyway. The `core-flow.spec.js` `<form>` scoping this collision had
 required was reverted to a plain `getByRole('button', { name: 'Search' })`
 once the collision no longer existed. Full suite re-confirmed 15/15
 passing after the change.
+
+## Design System — visual redesign with light/dark mode (2026-09-16)
+
+Goal: a restrained, intentional design system (not template-feeling AI
+defaults - no purple/blue gradients, no `rounded-full`-everywhere, no
+generic `shadow-lg`, no icon-in-a-colored-circle cards) with real
+light/dark mode, rolled out in stages so each step could be reviewed
+before the next.
+
+### Step 1 — tokens + toggle, applied to `/find` only
+
+- **Color**: accent (50-900) and neutral scales generated in OKLCH (the
+  same color space Tailwind's own default palette uses) from the exact
+  brand hex `#13a3e9` - step 500 is the unmodified input color, other
+  steps interpolate lightness/chroma around it. Every text/background
+  pairing actually used was verified with real WCAG contrast math (a
+  script computing sRGB->OKLab/OKLCH conversion and relative-luminance
+  contrast from first principles, not eyeballed): light mode's accent is
+  `#006ba7` (5.74:1 on white), dark mode's is a separately-tuned lighter
+  step, `#4eb5f4` (8.99:1 on the dark background) - confirmed by
+  reproducing the exact 2.82:1 figure Phase 4 measured for the raw brand
+  color against white as a sanity check that the math was right.
+- **Dark mode mechanism**: researched against Tailwind v4's own docs
+  before implementing, since the mechanism changed from v3.
+  `@custom-variant dark (&:where(.dark, .dark *));` opts into class-based
+  toggling (v4 defaults to `prefers-color-scheme` with no manual-override
+  path). Semantic tokens (`--color-bg`, `--color-accent`, etc.) use a
+  two-layer `:root`/`.dark` + `@theme inline` pattern - confirmed against
+  two independent sources that plain `@theme` bakes the `:root` value in
+  at build time and silently ignores `.dark` overrides.
+- **Typography**: Fraunces (headings, variable opsz+wght axis) + Inter
+  (body/UI), self-hosted via `@fontsource` - no third-party Google Fonts
+  request. Fraunces is scoped to `h1`/`h2` only, not every heading level,
+  so dense card grids stay in the scannable body sans.
+- **Radius**: two sizes only (`--radius-sm`/`--radius-md`); amenity
+  filter chips went from `rounded-full` pills to `rounded-sm`.
+- **Toggle**: OS `prefers-color-scheme` by default, manual override
+  persisted to `localStorage`, applied via a blocking inline script in
+  `index.html` before first paint (no flash of the wrong theme).
+
+Applied to `Find.jsx` plus `ListingCard`/`SkeletonCard` (unavoidable -
+`Find` renders them directly). Known limitation at the end of this step:
+the `.dark` class is global, so toggling dark mode while on any other
+(not-yet-migrated) page looked inconsistent.
+
+### Step 2 — rolled out to the rest of the app
+
+Header, Footer, home, Login/Signup, both dashboards, listing detail (+
+its skeleton), the `CreateListing` wizard, both modals (`InquiryModal`,
+`EditPropertyModal`), plus `ProtectedRoute`'s loading state, the route
+`Suspense` fallback, `notfound.jsx`, and the skip-to-content link.
+
+A few real fixes along the way, not just re-skinning:
+- **`<body>` had no themed background.** Individual pages set `bg-bg` on
+  their own root `<div>`, but the lazy-route `Suspense` fallback didn't -
+  in dark mode it would have flashed the browser's default white behind
+  "Loading..." until the real page mounted. Fixed once, globally, with
+  `body { background-color: var(--color-bg); }` in `@layer base`, instead
+  of chasing every gap page-by-page.
+- **Login/Signup's glassmorphism and gradient button removed.**
+  `backdrop-filter: blur(2px)` and a `linear-gradient(180deg,#086492,#064d70)`
+  button were exactly the anti-patterns the redesign brief called out.
+  Replaced with solid `bg-accent`/`bg-surface` - also deleted the
+  `<style jsx>` blocks they lived in (not an actual configured library in
+  this project, just a literal `<style>` tag that happened to work).
+- **Home page's second CTA would have gone near-invisible in dark mode.**
+  It used `bg-surface text-fg` (page-chrome tokens), but it sits on a
+  fixed dark photo scrim, not page chrome - in dark mode `--surface` is
+  itself near-black, so a near-black button on a near-black scrim loses
+  all edge definition. Given fixed, theme-independent colors
+  (`bg-white/10` ghost-button style) instead, since it needs to read the
+  same regardless of site-wide light/dark mode.
+- Old `--color-primary`/`--color-primary-dark` tokens removed entirely
+  once `grep` confirmed nothing referenced them anymore.
+
+Two things intentionally **not** changed, flagged rather than silently
+fixed: the home page's centered-hero-two-CTA-buttons layout is
+structurally the exact pattern the brief said to avoid, and its hero
+image is a stock Unsplash photo, not a real listing photo. Restyling
+that layout's colors happened; restructuring it did not - that's a
+layout decision beyond "roll out the design system," left for the user
+to decide as a follow-up.
+
+### Micro-interaction: `ListingCard` hover/focus
+
+One effect, applied consistently: on hover **and** keyboard focus
+(`:focus-visible`, via `group-focus-visible` since the whole card is one
+`<Link>`) the image scales to 1.05 within its clipped frame, the card
+gains elevation (`shadow-sm` -> `shadow-md`) and an accent-tinted border.
+The scale is the only piece gated behind `motion-safe:` - a shadow/border
+change isn't the kind of motion `prefers-reduced-motion` is about, but
+scaling content is. Verified with Playwright against real computed
+styles, not just visually:
+
+```
+[reducedMotion=no-preference] scale=1.05   (hover AND focus-visible)
+[reducedMotion=reduce]        scale=none   (hover AND focus-visible)
+```
+
+Also confirmed Phase 4's focus-visible work didn't regress: the site-wide
+`:focus-visible { outline: 2px solid #0d94d6 }` fallback and the new
+`focus-visible:ring-2 focus-visible:ring-accent` both still render
+together with the new border/shadow effect, not in place of it.
+
+### Lighthouse accessibility, light AND dark mode, all 5 pages
+
+Phase 4 already measured all 5 pages at 100 (light mode only, dark mode
+didn't exist yet). This re-check's job was to confirm the redesign didn't
+regress that, and to newly verify dark mode too.
+
+**Tooling problem worth recording**: there is no reliable Chrome flag for
+this. `--blink-settings=preferredColorScheme=2` had no effect (verified
+by inspecting Lighthouse's own `final-screenshot` audit artifact - still
+rendered light). `--force-dark-mode --enable-features=WebContentsForceDark`
+does something, but it's Chrome's own pixel-level auto-darkening/color
+inversion for pages that *don't* support dark mode - the wrong mechanism
+entirely for a page that already has real `prefers-color-scheme` support,
+and not a legitimate way to test whether this app's own `.dark`-class
+logic works. The documented, correct approach: drive a real Puppeteer
+page with `page.emulateMediaFeatures([{name: 'prefers-color-scheme',
+value: 'dark'}])`, navigate once to confirm `document.documentElement
+.classList.contains('dark')` is actually `true`, then hand that
+already-configured page to Lighthouse's own programmatic API (`lighthouse
+(url, flags, config, page)`, which accepts a Puppeteer page for exactly
+this scenario) instead of letting Lighthouse launch and navigate a fresh
+page itself. One real bug hit along the way: reusing one browser profile
+across runs leaked the *previous* run's `localStorage.roomie-theme`
+choice forward, silently overriding the next run's OS-preference
+emulation (correct behavior for a real user's explicit choice, wrong for
+testing the "no stored choice, follow the OS" path) - fixed by giving
+each page its own incognito browser context.
+
+| Page | Light | Dark |
+|---|---|---|
+| Home | 100 | 100 |
+| Find | 100 | 100 |
+| Login | 100 | 100 |
+| Signup | 100 | 100 |
+| Listing detail | 100 | 100 |
+
+Zero accessibility findings in any of the 10 runs. `.dark` class presence
+was explicitly asserted (not assumed) on every dark-mode run before the
+audit ran. Reports: `docs/lighthouse/phase-design-step2/<page>-<mode>.report.json`.
+
+Full Playwright suite re-run across both modes is the next step, pending
+approval.

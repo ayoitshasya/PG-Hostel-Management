@@ -8,29 +8,12 @@
 @import "@fontsource-variable/fraunces/opsz.css"; /* opsz+wght axes - the optical-size range is the actual reason Fraunces was picked */
 @import "@fontsource-variable/inter";
 
-/* Tailwind v4 is CSS-first: it does not read tailwind.config.js unless a
-   file explicitly does `@config "../tailwind.config.js";` (this project
-   never did). That file's `primary`/`primary-dark` color definitions were
-   therefore never actually compiled into any CSS - bg-primary/text-primary
-   silently generated nothing, the whole time, since the very first phase.
-   Defining the theme here instead, the way v4 actually expects. */
-@theme {
-  /* Pure brand blue - #13a3e9 vs white is 2.82:1, which fails WCAG AA even
-     for large/bold text (needs 3:1), let alone normal text (needs 4.5:1).
-     No text size passes on a white background, so keep this for non-text
-     decorative use only (e.g. the logo mark).
-
-     TEMPORARY during the design-system rollout: every screen except /find
-     still uses these two tokens directly. Do not remove until every page
-     has been migrated to the --accent-* system below (see PERFORMANCE.md,
-     "Design system, Step 2"). */
-  --color-primary: #13a3e9;
-  /* Same hue, darkened until it passes: 6.47:1 against pure white.
-     Deliberately darker than the ~4.5:1 minimum - Login/Signup use an
-     off-white page background (#f5f7f8, not #fff), and #0a7bb5 (4.65:1
-     against white) dropped to 4.33:1 there, just under the threshold. */
-  --color-primary-dark: #086492;
-}
+/* The original `primary`/`primary-dark` tokens (Phase 4's flat #13a3e9 /
+   #086492 pair, defined via a tailwind.config.js that Tailwind v4 never
+   actually read - see git history) are gone as of the design-system
+   rollout's Step 2: every screen now uses the --accent-* system below
+   instead. Nothing in the codebase references bg-primary/text-primary/
+   primary-dark anymore (verified via grep before removing this). */
 
 /* v4's dark-mode variant defaults to `prefers-color-scheme` with no way to
    override it manually. This opts into class-based toggling instead: add
@@ -115,6 +98,18 @@
      avoid. */
   h1, h2 {
     font-family: var(--font-heading);
+  }
+
+  /* Without this, <body> has no background of its own - individual pages
+     each set bg-bg on their own root div, but the Suspense fallback for
+     lazy-loaded routes (CreateListing, the dashboards) doesn't, so it would
+     flash the browser's default white behind the "Loading..." text in dark
+     mode until the real page's wrapper mounts. Setting it here once means
+     every page is covered from first paint, not just the ones that
+     remembered to set bg-bg on their own root element. */
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
   }
 }
 
