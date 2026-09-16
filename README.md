@@ -7,7 +7,8 @@ The project is a classic **MERN-style** monorepo split into two independent apps
 ```
 PG-Hostel-Management/
 ├── backend/   Express + MongoDB REST API (JWT auth)
-└── frontend/  React 19 SPA (Vite + Tailwind CSS v4)
+├── frontend/  React 19 SPA (Vite + Tailwind CSS v4)
+└── e2e/       Playwright cross-browser test suite (its own package - see Getting Started)
 ```
 
 ---
@@ -28,40 +29,56 @@ PG-Hostel-Management/
 ```
 backend/
 ├── index.js                 Express app entry point, DB connection, middleware wiring
+├── constants/
+│   └── listingOptions.js     single source of truth for propertyType/audience/furnishing/status/amenities
 ├── controllers/
 │   ├── authController.js     signup / login, JWT issuing
 │   ├── propertyController.js CRUD + search/filter for listings
 │   └── inquiryController.js  create/list/update tenant↔renter inquiries
+├── lib/
+│   └── imagePipeline.js      validates/rotates/strips/resizes photos, uploads to Cloudinary
 ├── middleware/
 │   ├── authMiddleware.js     verifies Bearer JWT, attaches req.user
-│   └── roleMiddleware.js     generic requireRole(...roles) guard
+│   ├── roleMiddleware.js     generic requireRole(...roles) guard (unused, see Known Limitations)
+│   └── upload.js              multer config for POST /api/uploads/photos
 ├── models/
 │   ├── User.js                name, email, passwordHash, role (renter|tenant)
-│   ├── Property.js            listing details + embedded Room subdocuments
+│   ├── Property.js            listing details + embedded Room subdocuments; enum validation from constants/listingOptions.js
 │   └── Inquiry.js             tenant → property inquiry with status
 ├── routes/
 │   ├── auth.js                 POST /signup, /login
 │   ├── properties.js           GET / (public), GET /:id, POST/PUT/DELETE (auth)
-│   └── inquiries.js            POST /, GET / (owner), GET /my (tenant), PUT /:id/status
-└── .env.example                 MONGO_URI, PORT, JWT_SECRET
+│   ├── inquiries.js            POST /, GET / (owner), GET /my (tenant), PUT /:id/status
+│   ├── uploads.js               POST /photos (auth, renter)
+│   └── meta.js                  GET /options (public)
+├── seed.js                    sample-data generator (`--plan` for a dry-run summary)
+├── migrate-amenities.js       one-off data migration (`--dry-run` supported)
+└── .env.example                 MONGO_URI, PORT, JWT_SECRET, CLOUDINARY_*
 
 frontend/
+├── public/
+│   └── robots.txt             crawler rules (disallows auth-gated routes)
 ├── src/
 │   ├── main.jsx               React root, wraps <App/> in <AuthProvider/>
 │   ├── App.jsx                 React Router route table
 │   ├── api/
 │   │   ├── api.js              Axios instance, injects Authorization header from localStorage
 │   │   ├── properties.js       fetch/create/update/delete property helpers
-│   │   └── inquiries.js        create/fetch/update inquiry helpers
+│   │   ├── inquiries.js        create/fetch/update inquiry helpers
+│   │   ├── uploads.js           POST /api/uploads/photos helper
+│   │   └── meta.js              fetches + caches GET /api/meta/options
 │   ├── context/
 │   │   └── AuthContext.jsx      global auth state (user, login, signup, logout)
+│   ├── hooks/
+│   │   └── useListingOptions.js  wraps api/meta.js with {options, loading, error}
 │   ├── components/
 │   │   ├── Header.jsx / Footer.jsx        site chrome
 │   │   ├── ProtectedRoute.jsx              role-gated route wrapper
 │   │   ├── ListingCard.jsx / SkeletonCard.jsx  property card + loading placeholder
 │   │   ├── Modal.jsx                       generic modal shell
 │   │   ├── InquiryModal.jsx                tenant "send inquiry" form
-│   │   └── EditPropertyModal.jsx           renter "edit listing" form
+│   │   ├── EditPropertyModal.jsx           renter "edit listing" form
+│   │   └── Seo.jsx                         per-page <title>/meta/OG tags (React 19 native head hoisting)
 │   └── screens/
 │       ├── home.jsx                         landing page
 │       ├── notfound.jsx                     404
@@ -70,7 +87,11 @@ frontend/
 │       ├── dashboard/RenterDashboard.jsx    renter's own listings
 │       ├── dashboard/TenantDashboard.jsx    tenant's sent inquiries
 │       └── listing/CreateListing.jsx, ListingDetail.jsx  multi-step listing form / detail page
-└── tailwind.config.js, vite.config.js
+└── vite.config.js
+
+e2e/
+├── playwright.config.js
+└── tests/                    core-flow / protected-routes / responsive specs, helpers.js
 ```
 
 ---
@@ -98,7 +119,7 @@ Role is chosen at signup and is required at login (login fails with 403 if the r
 - `rooms[]` — embedded `Room` subdocuments (`name`, `price`, `occupancy`, `availableFrom`, `status`); `totalRooms`/`occupancyPerRoom` are derived summary fields.
 - `price`/`currency` — top-level default price shown on cards (falls back to first room's price on the frontend).
 - `location` — `address`, `lat`/`lng`, `googleMapsUrl`.
-- `photos[]` — array of image URLs (no file upload/storage backend — see [Known Limitations](#8-known-limitations)).
+- `photos[]` — legacy plain image URLs (still supported). `photoAssets[]` — the current photo pipeline's output: Cloudinary-hosted, multi-width (`srcset`-ready) processed images (see [Image uploads](#image-uploads)).
 - `status` — `available` / `rented` / `coming_soon`.
 
 **Inquiry** (`backend/models/Inquiry.js`)
@@ -110,7 +131,7 @@ Role is chosen at signup and is required at login (login fails with 403 if the r
 ## 4. Backend Architecture
 
 ### Request Flow
-`index.js` wires: `dotenv` → `express-async-errors` (so async route handlers don't need manual try/catch for error propagation) → `cors` (locked to `http://localhost:5173`) → `express.json()` → mounted routers → a catch-all error handler that returns `{ error: message }` with the appropriate status code.
+`index.js` wires: `dotenv` → `express-async-errors` (so async route handlers don't need manual try/catch for error propagation) → `cors` (origin from `CLIENT_ORIGIN` env var, falls back to `http://localhost:5173`) → `express.json()` → mounted routers → a catch-all error handler that returns `{ error: message }` with the appropriate status code.
 
 ### Authentication
 - `POST /api/auth/signup` — hashes password with `bcryptjs`, creates the `User`, returns `{ token, user }`.
@@ -137,6 +158,16 @@ List filters (all optional query params): `amenities` (comma-separated, matched 
 | GET    | `/`             | Yes (renter) | List inquiries for properties you own |
 | GET    | `/my`           | Yes          | List inquiries you (as tenant) have sent |
 | PUT    | `/:id/status`   | Yes          | Update inquiry status (intended for the owning renter) |
+
+### Uploads API (`/api/uploads`)
+| Method | Path         | Auth | Description |
+|--------|--------------|------|-------------|
+| POST   | `/photos`    | Yes (renter) | Process + upload up to 8 listing photos (see [Image uploads](#image-uploads)) |
+
+### Meta API (`/api/meta`)
+| Method | Path         | Auth | Description |
+|--------|--------------|------|-------------|
+| GET    | `/options`   | No   | Canonical `propertyType`/`targetAudience`/`furnishing`/`status`/`amenities` values (`backend/constants/listingOptions.js`), consumed by `Find.jsx` and `CreateListing.jsx` instead of hardcoding their own copies |
 
 ---
 
@@ -169,7 +200,7 @@ Single `<BrowserRouter>` with a persistent `Header`/`Footer` around all routes:
 - **`TenantDashboard.jsx`** — fetches the tenant's own inquiries (`GET /api/inquiries/my`) and lets them jump to the listing or mark an inquiry `closed`.
 
 ### Styling
-Tailwind CSS v4 is wired in via the `@tailwindcss/vite` plugin (no separate PostCSS config needed for the utility layer); `src/index.css` is just `@import "tailwindcss";`. A single custom theme color (`primary: #13a3e9`) is defined in `tailwind.config.js`.
+Tailwind CSS v4 is wired in via the `@tailwindcss/vite` plugin (no separate PostCSS config needed for the utility layer). Tailwind v4 is CSS-first and does not read a `tailwind.config.js` unless one explicitly opts in with `@config` (this project doesn't have one) — the theme (`--color-primary`, `--color-primary-dark`) is defined directly in `src/index.css` via an `@theme` block.
 
 ---
 
@@ -348,7 +379,6 @@ Run `MONGODB_URI=<your Atlas URI> npm run seed` locally (pointed at Atlas instea
 
 These are useful to know before extending the app — noted here rather than fixed silently, since some may be deliberate simplifications for a coursework project:
 
-- **No image upload backend.** Listing photos are plain URL strings; the "Upload files" control in `CreateListing.jsx` only creates local `URL.createObjectURL` previews that are never sent to the server.
 - **`roleMiddleware.js` is unused.** Role checks are duplicated inline in each controller instead of composed via `requireRole()` in the route definitions.
 - **Renter inquiry inbox not surfaced in the UI.** `GET /api/inquiries` (list inquiries for a renter's properties) and `PUT /api/inquiries/:id/status` are implemented on the backend and in `src/api/inquiries.js`, but `RenterDashboard.jsx` only lists properties — there's no screen consuming `fetchOwnerInquiries`/`updateInquiryStatus` yet.
 - **No ownership check on inquiry status updates.** `inquiryController.updateStatus` doesn't verify the requester actually owns the property tied to the inquiry.
@@ -361,9 +391,18 @@ These are useful to know before extending the app — noted here rather than fix
 - `npm start` — run once with plain `node`
 - `npm run dev` — run with `nodemon` (auto-restart)
 - `npm run seed` — wipe and repopulate the database with sample renters/tenants/listings
+- `npm run seed:plan` — print the planned seed counts with zero database/network calls
+- `npm run migrate:amenities` — normalize stored `amenities` values to the canonical slugs in `constants/listingOptions.js`
+- `npm run migrate:amenities:dry` — print what the amenities migration would change, without writing anything
 
 **Frontend** (`frontend/package.json`)
 - `npm run dev` — Vite dev server
 - `npm run build` — production build
 - `npm run preview` — preview the production build locally
 - `npm run lint` — ESLint over the project
+
+**E2E** (`e2e/package.json`, see [End-to-end tests](#end-to-end-tests-playwright))
+- `npm test` — run the full Playwright suite (chromium, firefox, webkit, mobile)
+- `npm run test:mobile` — just the mobile-viewport project
+- `npm run test:headed` — same as `test`, with visible browser windows
+- `npm run report` — open the last HTML report
