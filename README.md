@@ -199,8 +199,12 @@ Single `<BrowserRouter>` with a persistent `Header`/`Footer` around all routes:
 - **`RenterDashboard.jsx`** — fetches all properties and client-side filters to the ones owned by the current user, rendering them via `ListingCard`.
 - **`TenantDashboard.jsx`** — fetches the tenant's own inquiries (`GET /api/inquiries/my`) and lets them jump to the listing or mark an inquiry `closed`.
 
-### Styling
-Tailwind CSS v4 is wired in via the `@tailwindcss/vite` plugin (no separate PostCSS config needed for the utility layer). Tailwind v4 is CSS-first and does not read a `tailwind.config.js` unless one explicitly opts in with `@config` (this project doesn't have one) — the theme (`--color-primary`, `--color-primary-dark`) is defined directly in `src/index.css` via an `@theme` block.
+### Styling & Theming
+Tailwind CSS v4 is wired in via the `@tailwindcss/vite` plugin (no separate PostCSS config needed for the utility layer). Tailwind v4 is CSS-first and does not read a `tailwind.config.js` unless one explicitly opts in with `@config` (this project doesn't have one) — tokens are defined directly in `src/index.css`.
+
+- **Tokens** — an OKLCH-generated accent scale (built on `#13a3e9`) and a neutral scale, 50–900, with separate semantic `--color-accent`/`--color-surface`/`--color-fg`/`--color-border` values for light and dark mode. Applied app-wide: Header/Footer, home, Login/Signup, both dashboards, ListingDetail, CreateListing, the modals, ProtectedRoute's loading state, the route Suspense fallback, and notfound.jsx.
+- **Dark mode** — class-based via Tailwind v4's `@custom-variant dark`. `useTheme`/`ThemeToggle` (`src/hooks`, `src/components`) default to the OS `prefers-color-scheme`, persist a manual override to `localStorage`, and apply it through a blocking inline script in `index.html` so there's no flash of the wrong theme on load.
+- **Fonts** — Fraunces (headings only) + Inter (body/UI), self-hosted via `@fontsource`.
 
 ---
 
