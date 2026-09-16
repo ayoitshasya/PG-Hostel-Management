@@ -1,3 +1,9 @@
+// Defines the /api/inquiries routes. Every route here passes through the
+// `auth` middleware first - it checks the Authorization header for a valid
+// JWT and attaches the logged-in user to req.user before the controller
+// runs. If there's no valid token, auth middleware stops the request before
+// it ever reaches the controller.
+
 const express = require('express');
 const router = express.Router();
 const inquiryController = require('../controllers/inquiryController');

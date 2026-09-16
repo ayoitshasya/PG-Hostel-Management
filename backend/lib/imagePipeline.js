@@ -1,4 +1,13 @@
+// This module is the real "image upload" logic for listing photos: given
+// the raw bytes of an uploaded image, it fixes its orientation, strips
+// hidden metadata, resizes it into a few standard widths, converts each to
+// the efficient WebP format, and uploads each size to Cloudinary. It's
+// used by the /api/uploads/photos route (see controllers/uploadController.js)
+// and by the seed script (to generate sample listing photos).
 const crypto = require("crypto");
+// sharp is a Node.js image-processing library (resize/rotate/convert) -
+// much faster than pure-JS alternatives because it uses native code
+// under the hood.
 const sharp = require("sharp");
 const cloudinary = require("../config/cloudinary");
 
@@ -7,6 +16,10 @@ const cloudinary = require("../config/cloudinary");
 // upscale (sharp's `withoutEnlargement`).
 const TARGET_WIDTHS = [400, 800, 1200];
 
+// Uploads a single image buffer (raw bytes already in memory) to
+// Cloudinary. Cloudinary's SDK wants a writable "stream" to push data
+// into rather than accepting a buffer directly, so this wraps that
+// stream API in a Promise we can simply `await`.
 function uploadBuffer(buffer, { folder, publicId, overwrite }) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(

@@ -1,3 +1,7 @@
+// Button in the Header that flips the site between light and dark mode.
+// The actual theme state/logic (reading OS preference, persisting the
+// user's choice, applying the .dark class) lives in the useTheme hook
+// (src/hooks/useTheme.js) - this component is just the clickable button.
 import React from "react";
 import useTheme from "../hooks/useTheme";
 
@@ -43,7 +47,11 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
+      // aria-pressed marks this as a toggle button and tells assistive
+      // tech its current on/off state - true while dark mode is active.
       aria-pressed={isDark}
+      // The label always describes what clicking the button will DO next
+      // (not the current state), matching the icon shown below.
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
       className="flex items-center justify-center w-8 h-8 rounded-sm border border-border text-fg-secondary hover:text-accent hover:border-accent transition-colors"

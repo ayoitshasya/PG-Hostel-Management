@@ -1,3 +1,8 @@
+// Custom hook (see useListingOptions.js for what that means) that manages
+// light/dark theme state. It works together with a small blocking <script>
+// in index.html that runs before React even loads, so the correct theme
+// class is already on <html> before the very first paint - this hook then
+// just reads that decision and lets the user toggle it afterwards.
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "roomie-theme";
@@ -20,6 +25,9 @@ function getInitialTheme() {
 export default function useTheme() {
   const [theme, setTheme] = useState(getInitialTheme);
 
+  // Runs every time `theme` changes (including the initial render). Toggling
+  // the "dark" class on <html> is what Tailwind's dark-mode variant
+  // (`dark:bg-...` etc.) actually watches for.
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") root.classList.add("dark");
@@ -32,6 +40,7 @@ export default function useTheme() {
     }
   }, [theme]);
 
+  // Flips between the two themes; used by the ThemeToggle button component.
   function toggleTheme() {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
   }

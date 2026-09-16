@@ -1,3 +1,8 @@
+// End-to-end test for the app's core user journey: a renter publishes a
+// listing, then a tenant finds it, sends an inquiry, and sees it appear on
+// their own dashboard. This drives the real UI in a real browser (not
+// calling the API directly), so it exercises the same code path a real
+// user would.
 const { test, expect } = require('@playwright/test');
 const { uniqueSuffix, signup } = require('./helpers');
 

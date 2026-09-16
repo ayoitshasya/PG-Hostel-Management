@@ -1,3 +1,5 @@
+// Catch-all screen for any route that doesn't match one of App.jsx's
+// defined paths (wired up as the "*" route).
 import React from "react";
 import { Link } from "react-router-dom";
 import Seo from "../components/Seo";

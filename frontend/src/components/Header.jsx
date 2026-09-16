@@ -1,15 +1,25 @@
+// Site-wide top navigation bar. Rendered once around every route (see
+// App.jsx) so it stays sticky/visible while the page content underneath
+// changes. Shows different links depending on whether someone is logged
+// in, and if so, whether they're a renter or a tenant.
 import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContextObject";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
+  // useContext reads shared state from AuthContext (set up in
+  // AuthContext.jsx) without having to pass `user`/`logout` down as props
+  // through every component in between - any component can "tune in" to
+  // this context the same way.
   const { user, logout } = useContext(AuthContext);
+  // useNavigate gives us a function to programmatically change the route
+  // (as opposed to <Link>, which only navigates on a click).
   const nav = useNavigate();
 
   function handleLogout() {
-    logout();
-    nav("/");
+    logout(); // clears the stored user/token (see AuthContext.jsx)
+    nav("/"); // send them back to the home page
   }
 
   return (
@@ -57,12 +67,17 @@ export default function Header() {
         {/* Right Section — Auth Buttons */}
         <div className="flex items-center space-x-3 text-sm">
           <ThemeToggle />
+          {/* `user ? (...) : (...)` is a ternary used as an if/else inside JSX:
+              logged-in visitors see their name + dashboard link + logout,
+              everyone else sees Login/Sign Up links instead. */}
           {user ? (
             <>
               <span className="text-fg-secondary hidden sm:inline font-medium">
                 Hi, {user.name}
               </span>
 
+              {/* Renters and tenants have different dashboards, so pick the
+                  right link based on the logged-in user's role. */}
               {user.role === "renter" ? (
                 <Link
                   to="/renter-dashboard"

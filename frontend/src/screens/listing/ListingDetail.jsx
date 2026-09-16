@@ -1,3 +1,7 @@
+  // The public "listing detail" page for one property (/listing/:id). Shows
+  // the full description, price, amenities, and location, plus an
+  // action panel on the side: tenants get a "Send Inquiry" button, the
+  // owning renter gets an "Edit Property" button instead.
   import React, { useEffect, useState, useContext } from "react";
   import { useParams } from "react-router-dom";
   import { fetchPropertyById } from "../../api/properties";
@@ -15,15 +19,21 @@
   const HERO_SIZES = "(min-width: 1024px) 66vw, 100vw";
 
   export default function ListingDetail() {
+    // :id comes from the route, e.g. /listing/64f...  (see App.jsx's route table).
     const { id } = useParams();
     const { user } = useContext(AuthContext);
     const [prop, setProp] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const [showEditPropertyModal, setShowEditPropertyModal] = useState(false);
+    // Tracks whether the hero <img> failed to load, so a "No Image
+    // Available" placeholder can be shown instead of a broken image icon.
     const [heroImgError, setHeroImgError] = useState(false);
     const { options } = useListingOptions();
 
+    // Re-fetches whenever the :id in the URL changes (e.g. navigating from
+    // one listing straight to another via a link, without unmounting this
+    // component first).
     useEffect(() => {
       loadProperty();
     }, [id]);
@@ -52,6 +62,8 @@
       );
     }
 
+    // Only logged-in tenants can send an inquiry; renters (including the
+    // owner) never see the inquiry button - they see the edit button instead.
     const canInquire = user && user.role === "tenant";
     const photo = getPrimaryPhoto(prop);
     const priceText = prop.price ? `₹${prop.price}/month` : "Contact for price";
@@ -71,6 +83,12 @@
               <div className="lg:col-span-2 bg-surface rounded-md shadow overflow-hidden">
                 {photo && !heroImgError ? (
                   <div className="w-full aspect-[8/5]">
+                    {/* Largest image on this page and the first thing a
+                        visitor sees, so it's loaded eagerly/high-priority
+                        rather than lazily - same reasoning as home.jsx's
+                        hero image. srcSet/sizes let the browser pick the
+                        right resolution for the viewport instead of always
+                        downloading the biggest variant. */}
                     <img
                       src={photo.src}
                       srcSet={photo.srcSet}
@@ -169,6 +187,10 @@
                             key={a}
                             className="bg-neutral-100 dark:bg-neutral-800 text-fg-secondary px-3 py-1 rounded-sm text-xs"
                           >
+                            {/* amenities are stored as canonical slugs (e.g.
+                                "wifi"); amenityLabel() turns that back into
+                                the human-readable label using the option
+                                list from useListingOptions(). */}
                             {amenityLabel(options, a)}
                           </span>
                         ))
@@ -201,6 +223,9 @@
 
               <aside className="bg-surface rounded-md shadow p-6 h-fit">
 
+                {/* Shown only to the logged-in owner of this exact property
+                    (not just any renter) - checks the user is not a tenant,
+                    is logged in, and their id matches prop.owner._id. */}
                 {
                   !canInquire
                   && user
@@ -233,6 +258,10 @@
                 )}
 
 
+                {/* Three possible states here: a tenant sees "Send Inquiry",
+                    a logged-in non-tenant (i.e. a renter who isn't the
+                    owner) sees an explanatory message, and a logged-out
+                    visitor sees a login link instead. */}
                 {canInquire ? (
                   <button
                     onClick={() => setShowInquiryModal(true)}
@@ -256,6 +285,10 @@
           </div>
         </div>
 
+        {/* Both modals are always mounted in the tree (not conditionally
+            rendered based on showX state alone) so they can control their
+            own open/close transitions via isOpen - only one of the two
+            ever applies to a given viewer, gated by !canInquire / canInquire. */}
         {!canInquire && (
           <EditPropertyModal
             isOpen={showEditPropertyModal}
@@ -278,7 +311,7 @@
           />
         )}
 
-        
+
       </>
     );
   }

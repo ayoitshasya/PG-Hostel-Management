@@ -4,6 +4,10 @@ const { test, expect } = require('@playwright/test');
 // a real mobile viewport (Pixel 5: 393x851, per Playwright's device
 // descriptor), not just a resized desktop browser window.
 test.describe('responsive layout on a mobile viewport', () => {
+  // "Horizontal overflow" = the page is wider than the screen, which on a
+  // real phone means an ugly sideways scrollbar and content getting cut
+  // off - comparing scrollWidth (how wide the content actually is) against
+  // innerWidth (how wide the visible viewport is) catches that directly.
   test('home page has no horizontal overflow and CTAs are reachable', async ({ page }) => {
     await page.goto('/');
     const bodyWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -18,6 +22,8 @@ test.describe('responsive layout on a mobile viewport', () => {
     await expect(main.getByRole('link', { name: 'List Your PG' })).toBeVisible();
   });
 
+  // Same overflow check as above, but on the busier /find page (search
+  // bar + several filter dropdowns), which is more likely to overflow.
   test('/find filters and results are usable without horizontal scrolling', async ({ page }) => {
     await page.goto('/find');
     const bodyWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -31,6 +37,10 @@ test.describe('responsive layout on a mobile viewport', () => {
     await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible();
   });
 
+  // page.request would run through the browser's own network stack, but
+  // this fetch just needs a listing id before navigating - a plain API
+  // request context (Playwright's `request` fixture) is a lighter way to
+  // get that than loading a page just to read data out of it.
   test('listing detail page stacks to one column and has no horizontal overflow', async ({ page, request }) => {
     // Grab a real listing id from the API rather than hardcoding one,
     // so this test doesn't depend on exactly what's seeded.

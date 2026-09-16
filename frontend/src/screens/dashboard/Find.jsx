@@ -1,3 +1,7 @@
+// The main "Browse listings" screen. Shows a small "Recommended" strip plus
+// a full filterable/searchable results grid. Search runs automatically
+// (debounced) as the user types or changes a filter - there's no separate
+// "Apply filters" button to click.
 import React, { useEffect, useState, useRef } from "react";
 import { fetchProperties } from "../../api/properties";
 import ListingCard from "../../components/ListingCard";
@@ -11,6 +15,8 @@ import Seo from "../../components/Seo";
 const RESULTS_PAGE_SIZE = 20;
 
 export default function Find() {
+  // "search" is the only tab currently implemented - "saved"/"requests"
+  // exist as placeholders below, see the JSX near the bottom of the file.
   const [activeTab, setActiveTab] = useState("search");
   const [query, setQuery] = useState("");
   const [propertyType, setPropertyType] = useState("");
@@ -19,7 +25,7 @@ export default function Find() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState([]);
-  
+
   const [recommended, setRecommended] = useState([]);
   const [results, setResults] = useState([]);
   // Both fetches always run on mount (see the effect below), so start in
@@ -31,21 +37,36 @@ export default function Find() {
   const [loadingRecommended, setLoadingRecommended] = useState(true);
   const [loadingResults, setLoadingResults] = useState(true);
   const [error, setError] = useState(null);
+  // Shared hook that fetches the canonical dropdown/checkbox option lists
+  // (property types, cities, audiences, amenities) from the backend once,
+  // instead of hardcoding them separately on every screen that needs them.
   const { options, loading: optionsLoading } = useListingOptions();
 
+  // Holds the setTimeout id for the debounced search-as-you-type below, so
+  // it can be cancelled if the user keeps typing before it fires. A ref
+  // (not state) because changing it should never trigger a re-render.
   const debounceRef = useRef(null);
 
+  // Runs exactly once, right after the first render ([] = empty dependency
+  // list) - kicks off the initial "Recommended" and "Results" fetches.
   useEffect(() => {
     loadRecommended();
     search();
   }, []);
 
+  // Re-runs search() whenever a filter (not the free-text query, which has
+  // its own debounce in onQueryChange) changes. The `if` guard just avoids
+  // firing this on the very first render, before any filter has actually
+  // changed away from its default.
   useEffect(() => {
     if (propertyType || city || targetAudience || minPrice || maxPrice || selectedAmenities.length > 0) {
       search();
     }
   }, [propertyType, city, targetAudience, minPrice, maxPrice, selectedAmenities]);
 
+  // Turns the current filter state into the query-params object the
+  // backend's GET /api/properties expects - only include a param if the
+  // user actually set it, so unset filters don't accidentally narrow results.
   function buildParams() {
     const params = { limit: RESULTS_PAGE_SIZE };
     if (query) params.query = query;
@@ -58,10 +79,14 @@ export default function Find() {
     return params;
   }
 
+  // Fetches a handful of properties for the "Recommended for you" strip.
+  // Currently just the first 3 results with no real personalization.
   async function loadRecommended() {
     setLoadingRecommended(true);
     try {
       const data = await fetchProperties({ limit: 3 });
+      // The API can return either { results: [...] } (paginated) or a bare
+      // array, depending on the endpoint - handle both defensively.
       const results = data.results || data || [];
       setRecommended(Array.isArray(results) ? results.slice(0, 3) : []);
     } catch (err) {
@@ -71,6 +96,8 @@ export default function Find() {
     }
   }
 
+  // Fetches the main results grid using whatever filters/search term are
+  // currently set.
   async function search() {
     setLoadingResults(true);
     setError(null);
@@ -89,12 +116,18 @@ export default function Find() {
     }
   }
 
+  // Handles pressing Enter / clicking the Search button - search
+  // immediately rather than waiting for the debounce timer below.
   function handleSearchSubmit(e) {
     e.preventDefault();
     if (debounceRef.current) clearTimeout(debounceRef.current);
     search();
   }
 
+  // "Debouncing": instead of firing a network request on every single
+  // keystroke, wait 500ms after the user stops typing before searching. If
+  // they type again before that timer fires, the old timer is cancelled and
+  // a new one starts - so a request only actually goes out once they pause.
   function onQueryChange(v) {
     setQuery(v);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -103,6 +136,8 @@ export default function Find() {
     }, 500);
   }
 
+  // Adds/removes one amenity from the selected list (checkbox-style
+  // multi-select) - the effect above re-runs search() whenever this changes.
   function toggleAmenity(amenity) {
     setSelectedAmenities((prev) => {
       const updated = prev.includes(amenity)
@@ -122,6 +157,7 @@ export default function Find() {
         <h1 className="text-2xl font-semibold mb-1">Welcome back</h1>
         <p className="text-fg-secondary mb-5">Find your perfect accommodation</p>
 
+        {/* Only one real tab ("Browse") exists today - see activeTab === "saved"/"requests" further down for the stubbed-out placeholders. */}
         <div className="flex gap-6 border-b border-border mb-4">
           <button
             onClick={() => setActiveTab("search")}
@@ -154,6 +190,10 @@ export default function Find() {
             </button>
           </div>
 
+          {/* Filter dropdowns - each one's options come from useListingOptions()
+              above (fetched from the backend) rather than being hardcoded here,
+              so adding a new property type/city/amenity on the backend doesn't
+              require a frontend code change. */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
             <label className="block">
               <span className="sr-only">Property type</span>
@@ -220,6 +260,9 @@ export default function Find() {
             </label>
           </div>
 
+          {/* Amenity chips - each one is a toggle button (not a checkbox
+              input) styled to look pressed/unpressed via aria-pressed, so
+              multiple can be active at once. */}
           <div className="flex flex-wrap gap-1.5">
             {optionsLoading && <span className="text-sm text-fg-secondary">Loading filters...</span>}
             {options.amenities.map((amenity) => (
@@ -249,6 +292,9 @@ export default function Find() {
                   ? [1, 2, 3].map((n) => <SkeletonCard key={n} />)
                   : recommended.length > 0
                   ? recommended.map((p, idx) => (
+                      // priority on the first card hints ListingCard to load
+                      // that image eagerly (it's likely above the fold),
+                      // the rest lazy-load as normal.
                       <ListingCard key={p._id} property={p} priority={idx === 0} />
                     ))
                   : (
@@ -261,6 +307,8 @@ export default function Find() {
               <h2 className="text-lg font-semibold mb-3">Results</h2>
               {error && <div className="mb-4 text-red-600 dark:text-red-400" role="alert">{error}</div>}
               {loadingResults ? (
+                // Skeleton grid matches RESULTS_PAGE_SIZE so the layout
+                // height doesn't jump once real results replace it.
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Array.from({ length: RESULTS_PAGE_SIZE }, (_, i) => (
                     <SkeletonCard key={i} />
@@ -281,6 +329,7 @@ export default function Find() {
           </>
         )}
 
+        {/* Placeholder tabs - not wired up to any real data yet. */}
         {activeTab === "saved" && (
           <div className="text-center py-12 text-fg-secondary">
             Saved properties feature coming soon

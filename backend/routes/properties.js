@@ -1,3 +1,7 @@
+// Defines the /api/properties routes: two public read endpoints (browse +
+// single listing) and three authenticated write endpoints (create/update/
+// delete), each wired to the matching function in controllers/propertyController.js.
+
 const express = require('express');
 const router = express.Router();
 const propertyController = require('../controllers/propertyController');
@@ -13,9 +17,12 @@ const authMiddleware = require('../middleware/authMiddleware');
 // immediately while it re-fetches in the background, instead of every
 // visitor after expiry waiting on a fresh network round trip.
 function cacheControl(value) {
+  // Returns an Express middleware function. This is a small factory so the
+  // same logic can be reused with two different cache durations below,
+  // instead of writing two nearly-identical middleware functions by hand.
   return (req, res, next) => {
     res.set('Cache-Control', value);
-    next();
+    next(); // hand off to the next middleware/controller in the chain
   };
 }
 
@@ -23,7 +30,8 @@ function cacheControl(value) {
 router.get('/', cacheControl('public, max-age=60, stale-while-revalidate=30'), propertyController.list);
 router.get('/:id', cacheControl('public, max-age=300, stale-while-revalidate=60'), propertyController.getById);
 
-// protected create/update/delete
+// protected create/update/delete - authMiddleware runs first and blocks
+// the request with a 401 if there's no valid logged-in user.
 router.post('/', authMiddleware, propertyController.create);
 router.put('/:id', authMiddleware, propertyController.update);
 router.delete('/:id', authMiddleware, propertyController.remove);

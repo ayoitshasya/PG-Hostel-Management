@@ -44,11 +44,19 @@ const LEGACY_TO_CANONICAL = {
   'gym': 'gym',
 };
 
+// Converts one stored amenity value to its canonical form: look it up in
+// the legacy map (e.g. "Power Backup" -> "power-backup"); if it's not in
+// the map, just lowercase+trim it and hope it's already canonical (handled
+// by the CANONICAL_VALUES.has() check in main() below, which drops anything
+// that still doesn't match after this).
 function normalize(raw) {
   const key = String(raw).trim().toLowerCase();
   return LEGACY_TO_CANONICAL[key] || key;
 }
 
+// Walks every Property document, normalizes its amenities array, and (in
+// LIVE mode) saves the ones that actually changed. Prints a summary either
+// way so you can review what would happen before committing to it.
 async function main() {
   console.log(`Mode: ${DRY_RUN ? 'DRY RUN (no writes)' : 'LIVE (will write changes)'}`);
   console.log(`Connecting to ${MONGODB_URI} ...`);
@@ -65,6 +73,9 @@ async function main() {
   for (const prop of properties) {
     const before = prop.amenities || [];
     const normalized = before.map(normalize);
+    // Two different legacy values could normalize to the SAME canonical
+    // value (e.g. "WiFi" and "wifi" both become "wifi") - this line removes
+    // duplicates that would otherwise appear after normalizing.
     const deduped = normalized.filter((v, i, arr) => arr.indexOf(v) === i);
     if (deduped.length !== normalized.length) dedupedCount++;
 
@@ -72,7 +83,12 @@ async function main() {
       if (!CANONICAL_VALUES.has(v)) unmapped.add(v);
     });
 
+    // Drop anything that still isn't a recognized canonical value after
+    // normalizing (logged as "unmapped" above) rather than saving garbage.
     const after = deduped.filter((v) => CANONICAL_VALUES.has(v));
+    // Only treat this document as "changed" if the array is genuinely
+    // different (different length, or same length but different values in
+    // some position) - avoids rewriting documents that were already fine.
     const isDifferent = before.length !== after.length || before.some((v, i) => v !== after[i]);
 
     if (isDifferent) {

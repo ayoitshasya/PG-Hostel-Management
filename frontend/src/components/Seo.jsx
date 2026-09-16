@@ -8,10 +8,18 @@ import React from "react";
 //
 // This only affects the DOM after React has hydrated and run - see
 // index.html for why that matters for SEO.
+//
+// Usage: each screen renders <Seo title="..." description="..." /> once,
+// near the top of its JSX - see e.g. ListingDetail.jsx or home.jsx.
 export default function Seo({ title, description, image, url, type = "website", noindex = false }) {
+  // Every page gets " | Roomie" appended, except when no page-specific
+  // title was given, in which case we fall back to a default full title.
   const fullTitle = title ? `${title} | Roomie` : "Roomie - PG, Hostel & Apartment Rentals";
 
   return (
+    // <>...</> is a React Fragment: a wrapper with no real DOM element of
+    // its own, needed here because a component can only return one root
+    // node, but we want to render several sibling <meta>/<title> tags.
     <>
       <title>{fullTitle}</title>
       {description && <meta name="description" content={description} />}

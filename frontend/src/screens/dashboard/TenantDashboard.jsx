@@ -1,3 +1,6 @@
+// A tenant's "My Inquiries" screen - lists every inquiry the logged-in
+// tenant has sent, each shown as a card with the property it's about, the
+// message they wrote, and its current status (pending/contacted/closed).
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { fetchMyInquiries, updateInquiryStatus } from "../../api/inquiries";
@@ -27,6 +30,9 @@ export default function TenantDashboard() {
     }
   }
 
+  // Lets the tenant mark their own inquiry as "closed" (e.g. once they've
+  // found a place or lost interest). Updates local state optimistically
+  // after the API call succeeds, rather than re-fetching the whole list.
   async function handleClose(inquiryId) {
     try {
       await updateInquiryStatus(inquiryId, "closed");
@@ -40,6 +46,7 @@ export default function TenantDashboard() {
     }
   }
 
+  // Skeleton/placeholder cards shown while the initial fetch is in flight.
   if (loading) {
     return (
       <div className="min-h-[70vh] bg-bg text-fg">
@@ -72,6 +79,8 @@ export default function TenantDashboard() {
         {error && <div className="mb-4 text-red-600 dark:text-red-400" role="alert">{error}</div>}
 
         {inquiries.length === 0 ? (
+          // Empty state: nudge the tenant back to /find instead of just
+          // showing a blank page.
           <div className="bg-surface rounded-md p-12 text-center">
             <p className="text-fg-secondary mb-4">
               You haven't contacted any properties yet.
@@ -86,8 +95,13 @@ export default function TenantDashboard() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {inquiries.map((inq) => {
+              // inq.property is the populated Property doc this inquiry was
+              // sent about (see inquiryController.js) - guard against it
+              // being missing/deleted with a fallback empty object.
               const property = inq.property || {};
               const thumbnail = property.photos?.[0];
+              // Fall back to the first room's price if the property has no
+              // top-level default price set.
               const price = property.price ?? property.rooms?.[0]?.price;
 
               return (
@@ -169,6 +183,7 @@ export default function TenantDashboard() {
                         View Property
                       </button>
 
+                      {/* Once already closed, there's nothing left to close. */}
                       {inq.status !== "closed" && (
                         <button
                           onClick={() => handleClose(inq._id)}

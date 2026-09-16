@@ -1,3 +1,8 @@
+// The "List Your Property" wizard - a renter fills this out to publish a
+// new Property. It's a 5-step form (Basic -> Amenities -> Rooms & Pricing ->
+// Photos -> Location & Contact); all the data is kept in this one
+// component's state and only assembled into a single POST /api/properties
+// request on final submit (nothing is saved between steps).
 import React, { useState } from "react";
 import API from "../../api/api";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +16,9 @@ export default function CreateListing() {
   const nav = useNavigate();
   const { options, loading: optionsLoading } = useListingOptions();
 
-  // Stepper
+  // Stepper: `step` is just an index into `steps`, controlling which
+  // section of the form is rendered below and which step marker is
+  // highlighted in the progress bar.
   const steps = ["Basic", "Amenities", "Rooms & Pricing", "Photos", "Location & Contact"];
   const [step, setStep] = useState(0);
 
@@ -26,7 +33,8 @@ export default function CreateListing() {
   // matching Find.jsx's filter state so the same values round-trip cleanly.
   const [selectedAmenities, setSelectedAmenities] = useState([]);
 
-  // Rooms
+  // Rooms: a property can have multiple rooms, each with its own
+  // price/occupancy/availability - starts with one blank room by default.
   const [rooms, setRooms] = useState([
     { name: "A1", price: "", occupancy: 1, availableFrom: "", status: "available" },
   ]);
@@ -57,16 +65,21 @@ export default function CreateListing() {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
-  // helpers
+  // ---- helpers ----
+
+  // Adds/removes one amenity slug from the selected list.
   function toggleAmenity(value) {
     setSelectedAmenities((prev) =>
       prev.includes(value) ? prev.filter((a) => a !== value) : [...prev, value]
     );
   }
 
+  // Appends a new blank room row, auto-naming it "R<n>" so it doesn't
+  // collide with the default "A1" or previously added rooms.
   function addRoom() {
     setRooms((r) => [...r, { name: `R${r.length + 1}`, price: "", occupancy: 1, availableFrom: "", status: "available" }]);
   }
+  // Merges a partial update into one room by index (e.g. updateRoom(0, { price: "5000" })).
   function updateRoom(i, patch) {
     setRooms((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
   }
@@ -79,6 +92,9 @@ export default function CreateListing() {
     setPhotoUrls((p) => [...p, url]);
   }
 
+  // Handles the <input type="file"> change event for real photo uploads:
+  // validates file size client-side, then sends the files to the backend's
+  // image pipeline (resize/optimize/store) via uploadPropertyPhotos().
   async function handleFileUpload(e) {
     const files = Array.from(e.target.files || []);
     e.target.value = ""; // allow re-selecting the same file(s) again later
@@ -94,6 +110,8 @@ export default function CreateListing() {
     setUploading(true);
     setUploadProgress(0);
     try {
+      // setUploadProgress is passed straight through as the progress
+      // callback, so uploadPropertyPhotos can report upload % as it happens.
       const assets = await uploadPropertyPhotos(files, setUploadProgress);
       setUploadedAssets((p) => [...p, ...assets]);
     } catch (err) {
@@ -111,6 +129,9 @@ export default function CreateListing() {
     setPhotoUrls((p) => p.filter((_, i) => i !== idx));
   }
 
+  // Checks only the fields relevant to the *current* step before letting
+  // the user move forward - not a full-form validation, since later steps
+  // haven't been filled in yet at this point.
   function validateStep() {
     setError(null);
     if (step === 0) {
@@ -134,6 +155,8 @@ export default function CreateListing() {
     if (step > 0) setStep((s) => s - 1);
   }
 
+  // Final submit - runs on the last step only. Builds one Property payload
+  // out of all the state collected across every step, then POSTs it.
   async function handleSubmit(e) {
     e.preventDefault();
     if (!validateStep()) return;
@@ -166,7 +189,13 @@ export default function CreateListing() {
         status: r.status || "available",
       })),
       totalRooms: rooms.length,
+      // occupancyPerRoom is a single summary number on Property even though
+      // rooms can technically each have their own occupancy - just uses the
+      // first room's value as a representative figure.
       occupancyPerRoom: rooms[0]?.occupancy || 1,
+      // Explicit "Default Price" wins if the renter set one; otherwise fall
+      // back to the first room's price so the listing always has a
+      // top-level price to show on cards.
       price: price ? Number(price) : (rooms[0] ? Number(rooms[0].price || 0) : 0),
       currency,
       photos: photoUrls,
@@ -187,6 +216,9 @@ export default function CreateListing() {
       const created = res.data;
       setSuccessMsg("Property created successfully.");
 
+      // Try to read the new property's id from whatever shape the response
+      // came back in, then redirect to its detail page; if for some reason
+      // no id is found, fall back to the renter's dashboard instead.
       const id = created._id || created.id || (res.data && res.data._id);
       if (id) {
         setTimeout(() => nav(`/listing/${id}`), 700);
@@ -233,7 +265,10 @@ export default function CreateListing() {
         {error && <div className="mb-4 text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
         {successMsg && <div className="mb-4 text-sm text-green-700 dark:text-green-400" role="status">{successMsg}</div>}
 
-        {/* Step content */}
+        {/* Step content - only one of these five blocks renders at a time,
+            based on the `step` index. Note this is a single <form> the
+            whole time; "Next"/"Back" just change which fields are visible,
+            they don't actually submit anything until the final step. */}
         {step === 0 && (
           <div className="space-y-4">
             <label className="block">
@@ -319,6 +354,9 @@ export default function CreateListing() {
               <button type="button" onClick={addRoom} className="text-sm bg-accent text-accent-fg hover:bg-accent-hover px-3 py-1 rounded-sm transition-colors">Add Room</button>
             </div>
 
+            {/* One <fieldset> per room, so screen readers announce each
+                group of inputs (name/price/occupancy/etc.) as belonging
+                together under "Room N". */}
             <div className="space-y-4">
               {rooms.map((r, i) => (
                 <fieldset key={i} className="border border-border p-4 rounded-sm">
@@ -375,6 +413,10 @@ export default function CreateListing() {
 
         {step === 3 && (
           <div className="space-y-4">
+            {/* Manual "paste a photo URL" path - reads straight from a plain
+                DOM element (not React state) since it's a one-off "type,
+                click Add, clear" interaction rather than something that
+                needs to be controlled continuously. */}
             <div>
               <label htmlFor="photo-url-input" className="text-sm font-medium text-fg">Add Photos (URLs)</label>
               <div className="flex gap-2 mt-2">
@@ -400,6 +442,9 @@ export default function CreateListing() {
               </div>
             </div>
 
+            {/* Real file upload path - goes through handleFileUpload(),
+                which sends the files to the backend's image-processing
+                pipeline (resize/optimize/store on Cloudinary). */}
             <div>
               <label htmlFor="photo-file-input" className="text-sm font-medium text-fg">Upload photos</label>
               <input
@@ -430,6 +475,9 @@ export default function CreateListing() {
 
               <div className="mt-3 flex flex-wrap gap-3">
                 {uploadedAssets.map((asset, idx) => {
+                  // Each uploaded photo comes back as several resized
+                  // variants (see backend/lib/imagePipeline.js) - use the
+                  // smallest one here since this is just a thumbnail preview.
                   const smallest = [...asset.variants].sort((a, b) => a.width - b.width)[0];
                   return (
                     <div key={idx} className="w-28 h-20 rounded-sm overflow-hidden relative border border-border">
@@ -510,7 +558,8 @@ export default function CreateListing() {
           </div>
         )}
 
-        {/* Navigation buttons */}
+        {/* Navigation buttons - Back is hidden on the first step, and the
+            last step swaps "Next" for the real submit button. */}
         <div className="mt-6 flex items-center justify-between">
           <div>
             {step > 0 && <button type="button" onClick={handleBack} className="px-4 py-2 border border-border rounded-sm text-fg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">Back</button>}

@@ -1,3 +1,7 @@
+// Fetches the canonical dropdown values (property types, cities, amenities,
+// etc.) that both the "Find" search filters and the "Create Listing" form
+// use, so those choices are defined once on the backend instead of being
+// hardcoded (and able to drift out of sync) in multiple frontend files.
 import API from "./api";
 
 // GET /api/meta/options is public, static, and rarely changes - cache the
@@ -6,6 +10,10 @@ import API from "./api";
 // each firing its own on mount.
 let cachedPromise = null;
 
+// Returns the (possibly still in-flight) promise for /meta/options. Because
+// `cachedPromise` lives outside the function (module scope), every caller
+// across the whole app shares the SAME promise/request instead of each one
+// triggering its own network call.
 export function fetchListingOptions() {
   if (!cachedPromise) {
     cachedPromise = API.get("/meta/options")

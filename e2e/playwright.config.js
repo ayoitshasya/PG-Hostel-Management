@@ -1,3 +1,5 @@
+// Playwright configuration for the end-to-end test suite: which browsers
+// to run tests in, where to find test files, and what base URL to hit.
 const { defineConfig, devices } = require('@playwright/test');
 
 // Assumes the backend (http://localhost:5000) and frontend

@@ -1,5 +1,10 @@
 import React from "react";
 
+// Loading placeholder for ListingDetail.jsx, shown while the single
+// property's data is being fetched from the API. Every gray block below
+// is a fake stand-in for a real piece of content (image, title, price,
+// amenity list, etc.) that gets swapped out once the real data arrives.
+//
 // Mirrors ListingDetail's real grid/spacing classes (same max-w-7xl,
 // grid-cols-1 lg:grid-cols-3, lg:col-span-2, gap-8, p-6) so it reserves
 // roughly the same space at every breakpoint, instead of a generic

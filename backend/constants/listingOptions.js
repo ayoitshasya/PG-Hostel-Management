@@ -11,6 +11,9 @@
 // Render root=backend/) - a root-level folder wouldn't be included in
 // either build.
 
+// The three kinds of listing a renter can create. "enum validation" means
+// Mongoose (see models/Property.js) will reject any propertyType value
+// that isn't one of these exact strings.
 const PROPERTY_TYPES = ["PG", "Apartment", "Hostel"];
 
 // Deliberately a fixed, small set rather than free text - Property.location.address
@@ -19,18 +22,25 @@ const PROPERTY_TYPES = ["PG", "Apartment", "Hostel"];
 // documents, same as any other value in this file.
 const CITIES = ["Mumbai", "Hyderabad", "Pune", "Bangalore"];
 
+// Who a listing is intended for. Each option has a `value` (what's stored
+// in the database / sent over the API) and a `label` (what's shown to a
+// human on screen) - keeping these separate lets us change display text
+// without a data migration.
 const AUDIENCES = [
   { value: "women", label: "Women" },
   { value: "men", label: "Men" },
   { value: "co-ed", label: "Co-ed" },
 ];
 
+// How furnished a listing is - same value/label pattern as AUDIENCES above.
 const FURNISHING = [
   { value: "furnished", label: "Furnished" },
   { value: "semi-furnished", label: "Semi-furnished" },
   { value: "unfurnished", label: "Unfurnished" },
 ];
 
+// Whether a listing is currently rentable. Renters update this from their
+// dashboard as rooms fill up or free up.
 const STATUSES = [
   { value: "available", label: "Available" },
   { value: "rented", label: "Rented" },

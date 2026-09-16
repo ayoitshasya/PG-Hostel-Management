@@ -1,3 +1,7 @@
+// Reusable "property card" shown in grids across the app - the search
+// results on /find, a renter's own listings on RenterDashboard, etc. Each
+// card is a clickable link to that property's detail page, showing a
+// photo, title, price, and a few amenities.
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { getPrimaryPhoto } from "../utils/images";
@@ -21,10 +25,18 @@ const CARD_SIZES = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw";
 // "Results") - callers pass whichever keeps the page's heading order
 // unbroken (no skipped levels) for their context.
 export default function ListingCard({ property, priority = false, headingLevel = 3 }) {
+  // Builds a variable tag name like "h3" so React renders an actual <h3>
+  // (or whatever level was requested) - JSX lets you use a variable as a
+  // tag name as long as it starts with a capital letter.
   const HeadingTag = `h${headingLevel}`;
+  // Tracks whether the <img> below failed to load, so we can fall back to
+  // a "No Image" placeholder instead of a broken-image icon.
   const [imgError, setImgError] = useState(false);
   const { options } = useListingOptions();
   const photo = getPrimaryPhoto(property);
+  // `??` (nullish coalescing) only falls through on null/undefined, not on
+  // 0 - important here since a real price of ₹0 shouldn't be treated as
+  // "missing" the way an empty string would be.
   const price = property.price ?? property.rooms?.[0]?.price ?? null;
   const priceLabel = price ? `${property.currency ?? "INR"} ${price}` : "Price N/A";
   const subtitle = property.description || property.propertyType || "";

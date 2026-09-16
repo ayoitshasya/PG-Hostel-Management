@@ -1,3 +1,5 @@
+// The public landing page ("/"). A single full-width hero image with a
+// headline and two calls-to-action: browse listings, or list a property.
 import React from "react";
 import { Link } from "react-router-dom";
 import Seo from "../components/Seo";
@@ -11,6 +13,10 @@ export default function Home() {
       />
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
         <div className="relative w-full max-w-6xl rounded-md overflow-hidden shadow-xl">
+          {/* This is the largest image on the page and almost always visible
+              without scrolling, so it's loaded eagerly and marked
+              high-priority instead of the usual lazy-loading - waiting to
+              discover it would delay the page's Largest Contentful Paint. */}
           <img
             src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.1.0&auto=format&fit=crop&w=1600&q=80"
             alt=""

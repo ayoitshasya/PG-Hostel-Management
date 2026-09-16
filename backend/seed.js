@@ -1,3 +1,11 @@
+// Sample-data generator for local development. Wipes the Users/Properties/
+// Inquiries collections in MONGODB_URI's database and creates a fresh,
+// deterministic set of renters, tenants, and listings so `/find` has
+// realistic data to search/filter against.
+//
+// Usage:
+//   node seed.js --plan   # prints what WOULD be created, no DB/network calls
+//   node seed.js          # actually wipes and re-seeds the database
 require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -180,6 +188,11 @@ function pick(arr, i) {
   return arr[i % arr.length];
 }
 
+// Builds the full array of listing objects (not yet saved) that will be
+// passed to Property.insertMany() in seed() below. Loops once per listing
+// index (0 to TOTAL_LISTINGS-1), deriving every field (locality, price,
+// amenities, rooms, etc.) from that index via the helper functions above,
+// so the whole dataset is reproducible from the same set of rules every run.
 async function buildListings(renterDocs) {
   const listings = [];
   for (let i = 0; i < TOTAL_LISTINGS; i++) {
@@ -287,6 +300,9 @@ function printPlan() {
   console.log('\nThis was computed with zero network/database calls. Run without --plan to actually seed (you run that step).');
 }
 
+// The real seeding routine: connects to MongoDB, wipes existing data, and
+// inserts fresh renters/tenants/listings/inquiries. Only runs when the
+// script is invoked WITHOUT --plan (see the bottom of this file).
 async function seed() {
   if (!HAS_CLOUDINARY) {
     console.warn('CLOUDINARY_* env vars not set - listings will use plain picsum.photos URLs (photos field) instead of the real upload pipeline (photoAssets). Set them in backend/.env to seed with real processed/optimized images.\n');
@@ -354,6 +370,10 @@ async function seed() {
   await mongoose.disconnect();
 }
 
+// Entry point: check the command-line flag to decide which mode to run in.
+// process.argv is the array of arguments the script was started with (e.g.
+// ['node', 'seed.js', '--plan']), so this checks whether '--plan' was
+// passed anywhere in that list.
 if (process.argv.includes('--plan')) {
   printPlan();
 } else {

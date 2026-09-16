@@ -1,3 +1,6 @@
+// The "Create Account" screen. Same role-picker pattern as Login.jsx, plus
+// name/phone/avatar fields. On submit it POSTs a new user through
+// AuthContext's signup(), then sends them home already logged in.
 import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContextObject";
@@ -5,18 +8,27 @@ import Seo from "../../components/Seo";
 
 export default function RoomieSignup() {
   const { signup } = useContext(AuthContext);
+  // Note the lowercase default here ("tenant") vs Login.jsx's "Tenant" -
+  // this one is sent straight to the API as-is (see payload.role below,
+  // which lowercases it again just to be safe), while Login's role is only
+  // ever used as a label/comparison value in the UI.
   const [role, setRole] = useState("tenant");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  // Tracks whether the signup request is in flight, so the submit button
+  // can show a spinner-ish label and disable itself to prevent double-submit.
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
 
+    // Quick client-side check before even hitting the network - the backend
+    // re-validates all of this too, this is just to fail fast with a clearer
+    // message instead of waiting for a round trip.
     if (!name.trim() || !email.trim() || !password) {
       alert("Name, email and password are required.");
       return;
@@ -29,6 +41,9 @@ export default function RoomieSignup() {
         email: email.trim().toLowerCase(),
         password,
         role: (role || "tenant").toLowerCase(),
+        // Optional fields: send `undefined` (which JSON.stringify simply
+        // drops) instead of an empty string, so the backend's schema
+        // defaults apply cleanly rather than storing "".
         phone: phone.trim() || undefined,
         avatarUrl: avatarUrl?.trim() || undefined,
       };
@@ -40,6 +55,10 @@ export default function RoomieSignup() {
     } catch (err) {
       console.error("Signup error:", err);
 
+      // The backend can fail in a few different shapes depending on where
+      // the error came from (validation vs. a thrown Error vs. Mongo) - try
+      // each likely spot in order and fall back to the generic Axios error
+      // message if none of them are present.
       const serverMessage =
         err?.response?.data?.error ||
         err?.response?.data?.message ||
@@ -82,6 +101,7 @@ export default function RoomieSignup() {
         </p>
 
         <section className="mt-8 flex flex-col items-center">
+          {/* Same segmented Renter/Tenant toggle as Login.jsx. */}
           <div className="w-[560px] max-w-full rounded-md p-1 border border-border bg-surface">
             <div className="flex rounded-sm overflow-hidden">
               <button
@@ -161,6 +181,8 @@ export default function RoomieSignup() {
               />
             </div>
 
+            {/* Phone and avatar are both optional, so they share a row to
+                keep the form from feeling longer than it needs to. */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="sr-only" htmlFor="phone">Phone</label>

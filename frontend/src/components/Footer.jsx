@@ -1,4 +1,7 @@
 // src/components/Footer.jsx
+//
+// Simple, static site footer rendered on every page (see App.jsx). Has no
+// state or props - it always renders the same links and copyright line.
 import React from "react";
 import { Link } from "react-router-dom";
 
