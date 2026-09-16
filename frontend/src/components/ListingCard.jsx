@@ -32,9 +32,9 @@ export default function ListingCard({ property, priority = false, headingLevel =
   return (
     <Link
       to={`/listing/${property._id}`}
-      className="block bg-white rounded-lg shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-dark transition-all overflow-hidden"
+      className="block bg-surface rounded-md shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all overflow-hidden"
     >
-      <div className="w-full h-44 md:h-40 lg:h-44 bg-gray-100">
+      <div className="w-full h-44 md:h-40 lg:h-44 bg-neutral-100 dark:bg-neutral-800">
         {photo && !imgError ? (
           <img
             src={photo.src}
@@ -50,39 +50,39 @@ export default function ListingCard({ property, priority = false, headingLevel =
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500">
+          <div className="w-full h-full flex items-center justify-center text-fg-secondary">
             No Image
           </div>
         )}
       </div>
 
-      <div className="p-4">
-        <HeadingTag className="font-semibold text-slate-900 text-base line-clamp-2">
+      <div className="p-3.5">
+        <HeadingTag className="font-semibold text-fg text-base line-clamp-2">
           {property.title}
         </HeadingTag>
 
-        <p className="text-sm text-slate-500 mt-1 line-clamp-2">{subtitle}</p>
+        <p className="text-sm text-fg-secondary mt-1 line-clamp-2">{subtitle}</p>
 
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-slate-600">
+        <div className="flex items-center justify-between mt-3">
+          <div className="text-sm text-fg-secondary">
             {property.targetAudience && (
-              <span className="inline-block mr-2 px-2 py-0.5 text-xs rounded bg-slate-100">
+              <span className="inline-block mr-2 px-2 py-0.5 text-xs rounded-sm bg-neutral-100 dark:bg-neutral-800">
                 {property.targetAudience}
               </span>
             )}
-            <span className="text-sm font-medium">{priceLabel}</span>
+            <span className="text-sm font-medium text-fg">{priceLabel}</span>
           </div>
 
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-fg-secondary">
             {property.totalRooms ?? ""} rooms
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
           {(property.amenities || []).slice(0, 3).map((a) => (
             <span
               key={a}
-              className="text-xs text-slate-500 bg-slate-50 px-2 py-0.5 rounded"
+              className="text-xs text-fg-secondary bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-sm"
             >
               {amenityLabel(options, a)}
             </span>

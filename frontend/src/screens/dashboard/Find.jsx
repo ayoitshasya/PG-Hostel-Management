@@ -113,184 +113,186 @@ export default function Find() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
-      <Seo
-        title="Search PGs, Hostels & Apartments"
-        description="Browse and filter PG, hostel, and shared apartment listings by property type, audience, price, and amenities."
-      />
-      <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h1>
-      <p className="text-slate-500 mb-8">Find your perfect accommodation</p>
+    <div className="min-h-screen bg-bg text-fg">
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <Seo
+          title="Search PGs, Hostels & Apartments"
+          description="Browse and filter PG, hostel, and shared apartment listings by property type, audience, price, and amenities."
+        />
+        <h1 className="text-2xl font-semibold mb-1">Welcome back</h1>
+        <p className="text-fg-secondary mb-5">Find your perfect accommodation</p>
 
-      <div className="flex gap-6 border-b border-slate-200 mb-6">
-        <button
-          onClick={() => setActiveTab("search")}
-          className={`pb-3 px-2 font-medium transition-colors ${
-            activeTab === "search"
-              ? "text-primary-dark border-b-2 border-primary-dark"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Browse
-        </button>
-      </div>
-
-      <form onSubmit={handleSearchSubmit} className="mb-8">
-        <div className="flex gap-3 items-center mb-4">
-          <label className="flex-1">
-            <span className="sr-only">Search for PG or Hostel</span>
-            <input
-              value={query}
-              onChange={(e) => onQueryChange(e.target.value)}
-              placeholder="Search for PG or Hostel"
-              className="w-full rounded-lg border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-200"
-            />
-          </label>
+        <div className="flex gap-6 border-b border-border mb-4">
           <button
-            type="submit"
-            className="px-6 py-3 rounded-lg bg-primary-dark hover:bg-primary text-white font-medium"
+            onClick={() => setActiveTab("search")}
+            className={`pb-2.5 px-1 text-sm font-medium transition-colors ${
+              activeTab === "search"
+                ? "text-accent border-b-2 border-accent"
+                : "text-fg-secondary hover:text-fg"
+            }`}
           >
-            Search
+            Browse
           </button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-          <label className="block">
-            <span className="sr-only">Property type</span>
-            <select
-              value={propertyType}
-              onChange={(e) => setPropertyType(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
-            >
-              <option value="">All Types</option>
-              {options.propertyTypes.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="sr-only">City</span>
-            <select
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
-            >
-              <option value="">All Cities</option>
-              {options.cities.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="sr-only">Target audience</span>
-            <select
-              value={targetAudience}
-              onChange={(e) => setTargetAudience(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
-            >
-              <option value="">All Audiences</option>
-              {options.audiences.map((a) => (
-                <option key={a.value} value={a.value}>{a.label}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="sr-only">Minimum price</span>
-            <input
-              type="number"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              placeholder="Min Price"
-              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
-            />
-          </label>
-
-          <label className="block">
-            <span className="sr-only">Maximum price</span>
-            <input
-              type="number"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              placeholder="Max Price"
-              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
-            />
-          </label>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {optionsLoading && <span className="text-sm text-slate-500">Loading filters...</span>}
-          {options.amenities.map((amenity) => (
+        <form onSubmit={handleSearchSubmit} className="mb-6">
+          <div className="flex gap-2 items-center mb-3">
+            <label className="flex-1">
+              <span className="sr-only">Search for PG or Hostel</span>
+              <input
+                value={query}
+                onChange={(e) => onQueryChange(e.target.value)}
+                placeholder="Search for PG or Hostel"
+                className="w-full rounded-sm border border-border bg-surface text-fg px-3.5 py-2.5 placeholder:text-fg-secondary focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              />
+            </label>
             <button
-              key={amenity.value}
-              type="button"
-              onClick={() => toggleAmenity(amenity.value)}
-              aria-pressed={selectedAmenities.includes(amenity.value)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedAmenities.includes(amenity.value)
-                  ? "bg-primary-dark text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
+              type="submit"
+              className="px-5 py-2.5 rounded-sm bg-accent text-accent-fg hover:bg-accent-hover font-medium transition-colors"
             >
-              {amenity.label}
+              Search
             </button>
-          ))}
-        </div>
-      </form>
+          </div>
 
-      {activeTab === "search" && (
-        <>
-          <section className="mb-10">
-            <h2 className="text-lg font-semibold mb-4">Recommended for you</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {loadingRecommended
-                ? [1, 2, 3].map((n) => <SkeletonCard key={n} />)
-                : recommended.length > 0
-                ? recommended.map((p, idx) => (
-                    <ListingCard key={p._id} property={p} priority={idx === 0} />
-                  ))
-                : (
-                  <div className="col-span-3 text-slate-500">No recommendations found.</div>
-                )}
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold mb-4">Results</h2>
-            {error && <div className="mb-4 text-red-600" role="alert">{error}</div>}
-            {loadingResults ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: RESULTS_PAGE_SIZE }, (_, i) => (
-                  <SkeletonCard key={i} />
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+            <label className="block">
+              <span className="sr-only">Property type</span>
+              <select
+                value={propertyType}
+                onChange={(e) => setPropertyType(e.target.value)}
+                className="w-full rounded-sm border border-border bg-surface text-fg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              >
+                <option value="">All Types</option>
+                {options.propertyTypes.map((t) => (
+                  <option key={t} value={t}>{t}</option>
                 ))}
-              </div>
-            ) : results.length ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {results.map((p) => (
-                  <ListingCard key={p._id} property={p} />
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="sr-only">City</span>
+              <select
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="w-full rounded-sm border border-border bg-surface text-fg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              >
+                <option value="">All Cities</option>
+                {options.cities.map((c) => (
+                  <option key={c} value={c}>{c}</option>
                 ))}
-              </div>
-            ) : (
-              <div className="text-slate-500">
-                No results found. Try adjusting your filters or search term.
-              </div>
-            )}
-          </section>
-        </>
-      )}
+              </select>
+            </label>
 
-      {activeTab === "saved" && (
-        <div className="text-center py-12 text-slate-500">
-          Saved properties feature coming soon
-        </div>
-      )}
+            <label className="block">
+              <span className="sr-only">Target audience</span>
+              <select
+                value={targetAudience}
+                onChange={(e) => setTargetAudience(e.target.value)}
+                className="w-full rounded-sm border border-border bg-surface text-fg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              >
+                <option value="">All Audiences</option>
+                {options.audiences.map((a) => (
+                  <option key={a.value} value={a.value}>{a.label}</option>
+                ))}
+              </select>
+            </label>
 
-      {activeTab === "requests" && (
-        <div className="text-center py-12 text-slate-500">
-          View your requests in the dashboard
-        </div>
-      )}
+            <label className="block">
+              <span className="sr-only">Minimum price</span>
+              <input
+                type="number"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                placeholder="Min Price"
+                className="w-full rounded-sm border border-border bg-surface text-fg px-3 py-2 text-sm placeholder:text-fg-secondary focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              />
+            </label>
+
+            <label className="block">
+              <span className="sr-only">Maximum price</span>
+              <input
+                type="number"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                placeholder="Max Price"
+                className="w-full rounded-sm border border-border bg-surface text-fg px-3 py-2 text-sm placeholder:text-fg-secondary focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              />
+            </label>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {optionsLoading && <span className="text-sm text-fg-secondary">Loading filters...</span>}
+            {options.amenities.map((amenity) => (
+              <button
+                key={amenity.value}
+                type="button"
+                onClick={() => toggleAmenity(amenity.value)}
+                aria-pressed={selectedAmenities.includes(amenity.value)}
+                className={`px-3 py-1.5 rounded-sm text-sm font-medium transition-colors ${
+                  selectedAmenities.includes(amenity.value)
+                    ? "bg-accent text-accent-fg"
+                    : "bg-neutral-100 dark:bg-neutral-800 text-fg-secondary hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                }`}
+              >
+                {amenity.label}
+              </button>
+            ))}
+          </div>
+        </form>
+
+        {activeTab === "search" && (
+          <>
+            <section className="mb-6">
+              <h2 className="text-lg font-semibold mb-3">Recommended for you</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {loadingRecommended
+                  ? [1, 2, 3].map((n) => <SkeletonCard key={n} />)
+                  : recommended.length > 0
+                  ? recommended.map((p, idx) => (
+                      <ListingCard key={p._id} property={p} priority={idx === 0} />
+                    ))
+                  : (
+                    <div className="col-span-3 text-fg-secondary">No recommendations found.</div>
+                  )}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-semibold mb-3">Results</h2>
+              {error && <div className="mb-4 text-red-600 dark:text-red-400" role="alert">{error}</div>}
+              {loadingResults ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Array.from({ length: RESULTS_PAGE_SIZE }, (_, i) => (
+                    <SkeletonCard key={i} />
+                  ))}
+                </div>
+              ) : results.length ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {results.map((p) => (
+                    <ListingCard key={p._id} property={p} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-fg-secondary">
+                  No results found. Try adjusting your filters or search term.
+                </div>
+              )}
+            </section>
+          </>
+        )}
+
+        {activeTab === "saved" && (
+          <div className="text-center py-12 text-fg-secondary">
+            Saved properties feature coming soon
+          </div>
+        )}
+
+        {activeTab === "requests" && (
+          <div className="text-center py-12 text-fg-secondary">
+            View your requests in the dashboard
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContextObject";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
   const { user, logout } = useContext(AuthContext);
@@ -55,6 +56,7 @@ export default function Header() {
 
         {/* Right Section — Auth Buttons */}
         <div className="flex items-center space-x-3 text-sm">
+          <ThemeToggle />
           {user ? (
             <>
               <span className="text-gray-700 hidden sm:inline font-medium">

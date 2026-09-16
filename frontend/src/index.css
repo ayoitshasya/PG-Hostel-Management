@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Self-hosted (not Google Fonts CDN) - one less third-party request/DNS
+   lookup on every page load, consistent with the image-pipeline work in
+   Phase 3. Variable fonts: one file each covers the full weight range
+   (and Fraunces's optical-size axis), instead of separate files per
+   weight. font-display:swap is set by @fontsource's own CSS. */
+@import "@fontsource-variable/fraunces/opsz.css"; /* opsz+wght axes - the optical-size range is the actual reason Fraunces was picked */
+@import "@fontsource-variable/inter";
+
 /* Tailwind v4 is CSS-first: it does not read tailwind.config.js unless a
    file explicitly does `@config "../tailwind.config.js";` (this project
    never did). That file's `primary`/`primary-dark` color definitions were
@@ -10,15 +18,143 @@
   /* Pure brand blue - #13a3e9 vs white is 2.82:1, which fails WCAG AA even
      for large/bold text (needs 3:1), let alone normal text (needs 4.5:1).
      No text size passes on a white background, so keep this for non-text
-     decorative use only (e.g. the logo mark). */
+     decorative use only (e.g. the logo mark).
+
+     TEMPORARY during the design-system rollout: every screen except /find
+     still uses these two tokens directly. Do not remove until every page
+     has been migrated to the --accent-* system below (see PERFORMANCE.md,
+     "Design system, Step 2"). */
   --color-primary: #13a3e9;
   /* Same hue, darkened until it passes: 6.47:1 against pure white.
      Deliberately darker than the ~4.5:1 minimum - Login/Signup use an
      off-white page background (#f5f7f8, not #fff), and #0a7bb5 (4.65:1
-     against white) dropped to 4.33:1 there, just under the threshold.
-     This shade keeps margin against any near-white background instead
-     of tuning to one exact color. Used for anything with text on/as it. */
+     against white) dropped to 4.33:1 there, just under the threshold. */
   --color-primary-dark: #086492;
+}
+
+/* v4's dark-mode variant defaults to `prefers-color-scheme` with no way to
+   override it manually. This opts into class-based toggling instead: add
+   `.dark` to <html> and every `dark:` utility activates, regardless of OS
+   setting - needed for a toggle that overrides the OS default rather than
+   just following it. (Confirmed against Tailwind's own v4 dark-mode docs -
+   this is the documented replacement for v3's `darkMode: 'class'` in
+   tailwind.config.js, which no longer exists in this project.) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- Design system tokens (Step 1 rollout: /find only for now) ----
+   Two-layer setup, required for `.dark` to actually work at runtime:
+   1. Raw values live as plain custom properties in :root / .dark below.
+   2. @theme inline re-exposes them under Tailwind's --color-* namespace so
+      utilities like `bg-surface` exist - "inline" is what makes Tailwind
+      resolve `var(--surface)` live at paint time instead of baking in
+      whatever :root's value was at build time (plain `@theme` bakes the
+      value in once and .dark overrides would be silently ignored).
+   Every accent/neutral step below was generated in OKLCH (same color space
+   Tailwind's own default palette uses) from the exact brand hex #13a3e9,
+   then verified with real WCAG contrast math - see
+   docs/design-system.md for the generation script and full contrast table
+   (every pairing actually used for text meets 4.5:1, most well past it). */
+@theme {
+  /* Full accent scale - OKLCH-generated from #13a3e9, hue held constant,
+     lightness/chroma stepped like Tailwind's own scales (chroma tapers
+     near the light/dark ends so 50 and 900 don't look washed-out/muddy).
+     accent-500 is the exact input brand color, unmodified. Not all steps
+     are used directly by components - they're here so a one-off need
+     (e.g. bg-accent-100) doesn't require inventing a new hex by eye. */
+  --color-accent-50: #e9f8ff;
+  --color-accent-100: #cdedff;
+  --color-accent-200: #a5dcff;
+  --color-accent-300: #7bc7f9;
+  --color-accent-400: #4eb5f4;
+  --color-accent-500: #13a3e9;
+  --color-accent-600: #008acc;
+  --color-accent-700: #006ba7;
+  --color-accent-800: #004d80;
+  --color-accent-900: #003257;
+
+  /* Neutral scale - same hue as the brand at near-zero chroma (0.006),
+     so grays read as part of one coherent system instead of a
+     generic gray from an unrelated part of the color wheel. */
+  --color-neutral-50: #f5f9fc;
+  --color-neutral-100: #ebeff2;
+  --color-neutral-200: #dadfe2;
+  --color-neutral-300: #c4c8cb;
+  --color-neutral-400: #95999c;
+  --color-neutral-500: #6e7275;
+  --color-neutral-600: #505355;
+  --color-neutral-700: #35383b;
+  --color-neutral-800: #1d2022;
+  --color-neutral-900: #0b0e10;
+  --color-neutral-950: #030506;
+
+  /* Two sizes only, deliberately - no rounded-full-by-default anywhere.
+     sm for controls (inputs, chips, buttons), md for containers (cards,
+     modals). A genuinely circular element (e.g. an avatar) still reaches
+     for rounded-full directly; it's just not the default shape of
+     everything. */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+
+  /* Fraunces for headings (soft-serif, ink-trap detailing, an optical-size
+     axis that sharpens at small sizes and gets more expressive at large
+     ones) paired with Inter for body/UI text (dense screens like /find
+     stay fast to scan). Both self-hosted variable fonts - see the @import
+     above. `--font-sans` is Tailwind's own token name, so overriding it
+     here also becomes the Preflight default for body text generally. */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Fraunces Variable", ui-serif, Georgia, serif;
+}
+
+@layer base {
+  /* Only page titles and major section headers (h1/h2) get the display
+     serif - h3+ is repeated micro-content (card titles in a dense grid,
+     etc.) where a body sans keeps scanning fast. Reserving the display
+     face for macro structure, not every heading level, is deliberate:
+     using it everywhere is exactly the kind of undifferentiated "apply
+     the theme font to all headings" look this redesign is trying to
+     avoid. */
+  h1, h2 {
+    font-family: var(--font-heading);
+  }
+}
+
+:root {
+  --bg: var(--color-neutral-50);           /* page background */
+  --surface: #ffffff;                       /* cards/panels, raised above bg */
+  --fg: var(--color-neutral-900);           /* primary text: 19.4:1 on white */
+  --fg-secondary: var(--color-neutral-600); /* muted text: 7.75:1 on white */
+  --border: var(--color-neutral-200);
+  --accent: var(--color-accent-700);        /* 5.74:1 on white, 5.42:1 on --bg */
+  --accent-hover: var(--color-accent-800);  /* darker on hover, light mode */
+  --accent-fg: #ffffff;                     /* text on a solid --accent fill: 5.74:1 */
+  --accent-subtle: var(--color-accent-50);  /* tinted bg, e.g. a selected chip */
+  --accent-subtle-fg: var(--color-accent-800); /* 8.15:1 on --accent-subtle */
+}
+
+.dark {
+  --bg: var(--color-neutral-950);
+  --surface: var(--color-neutral-900);      /* slightly lighter than bg, not pure black */
+  --fg: var(--color-neutral-50);            /* 19.3:1 on --bg */
+  --fg-secondary: var(--color-neutral-400); /* 7.11:1 on --bg */
+  --border: var(--color-neutral-800);
+  --accent: var(--color-accent-400);        /* lighter step - 8.99:1 on --bg, 8.52:1 on --surface */
+  --accent-hover: var(--color-accent-300);  /* lighter on hover in dark mode, opposite direction from light */
+  --accent-fg: var(--color-neutral-950);    /* dark text on the lighter --accent fill: 8.99:1 */
+  --accent-subtle: var(--color-accent-900);
+  --accent-subtle-fg: var(--color-accent-300); /* 7.14:1 on --accent-subtle */
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-fg-secondary: var(--fg-secondary);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-subtle-fg: var(--accent-subtle-fg);
 }
 
 /* Site-wide fallback focus style for keyboard navigation. Tailwind's

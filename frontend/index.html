@@ -2,6 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      Sets the .dark class on <html> BEFORE any CSS paints, so there's no
+      flash of the wrong theme on load. Must be a synchronous classic
+      script (not type="module", which is deferred) placed this early -
+      React's own theme hook (src/hooks/useTheme.js) reads the class this
+      script already set rather than duplicating this OS-preference/
+      localStorage logic and risking the two disagreeing.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("roomie-theme");
+          var isDark = stored === "dark" || (stored !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (isDark) document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!--
