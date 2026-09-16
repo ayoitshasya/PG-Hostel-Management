@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { PROPERTY_TYPES, AUDIENCES, FURNISHING, STATUSES, AMENITIES } = require("../constants/listingOptions");
+const { PROPERTY_TYPES, CITIES, AUDIENCES, FURNISHING, STATUSES, AMENITIES } = require("../constants/listingOptions");
 
 const AUDIENCE_VALUES = AUDIENCES.map((a) => a.value);
 const FURNISHING_VALUES = FURNISHING.map((f) => f.value);
@@ -53,6 +53,7 @@ const PropertySchema = new mongoose.Schema(
     title: { type: String, required: true },
     description: String,
     propertyType: { type: String, enum: PROPERTY_TYPES },
+    city: { type: String, enum: CITIES },
     targetAudience: { type: String, enum: AUDIENCE_VALUES },
     furnishing: {
       type: String,

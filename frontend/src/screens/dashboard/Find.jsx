@@ -14,6 +14,7 @@ export default function Find() {
   const [activeTab, setActiveTab] = useState("search");
   const [query, setQuery] = useState("");
   const [propertyType, setPropertyType] = useState("");
+  const [city, setCity] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -40,15 +41,16 @@ export default function Find() {
   }, []);
 
   useEffect(() => {
-    if (propertyType || targetAudience || minPrice || maxPrice || selectedAmenities.length > 0) {
+    if (propertyType || city || targetAudience || minPrice || maxPrice || selectedAmenities.length > 0) {
       search();
     }
-  }, [propertyType, targetAudience, minPrice, maxPrice, selectedAmenities]);
+  }, [propertyType, city, targetAudience, minPrice, maxPrice, selectedAmenities]);
 
   function buildParams() {
     const params = { limit: RESULTS_PAGE_SIZE };
     if (query) params.query = query;
     if (propertyType) params.propertyType = propertyType;
+    if (city) params.city = city;
     if (targetAudience) params.audience = targetAudience;
     if (minPrice) params.minPrice = minPrice;
     if (maxPrice) params.maxPrice = maxPrice;
@@ -151,7 +153,7 @@ export default function Find() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
           <label className="block">
             <span className="sr-only">Property type</span>
             <select
@@ -162,6 +164,20 @@ export default function Find() {
               <option value="">All Types</option>
               {options.propertyTypes.map((t) => (
                 <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="sr-only">City</span>
+            <select
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
+            >
+              <option value="">All Cities</option>
+              {options.cities.map((c) => (
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </label>

@@ -10,6 +10,7 @@ exports.list = async (req, res) => {
       maxPrice,
       audience,
       propertyType,
+      city,
       furnishing,
       status,
       query,  // ← Changed from 'q' to match frontend
@@ -44,7 +45,9 @@ exports.list = async (req, res) => {
     if (audience) filter.targetAudience = audience;
     
     if (propertyType) filter.propertyType = propertyType;
-    
+
+    if (city) filter.city = city;
+
     if (furnishing) filter.furnishing = furnishing;
     
     if (status) filter.status = status;

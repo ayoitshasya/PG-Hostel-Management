@@ -8,7 +8,9 @@
     "seed": "node seed.js",
     "seed:plan": "node seed.js --plan",
     "migrate:amenities": "node migrate-amenities.js",
-    "migrate:amenities:dry": "node migrate-amenities.js --dry-run"
+    "migrate:amenities:dry": "node migrate-amenities.js --dry-run",
+    "migrate:city": "node migrate-city.js",
+    "migrate:city:dry": "node migrate-city.js --dry-run"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

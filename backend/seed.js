@@ -89,17 +89,24 @@ const TENANTS = [
   { name: 'Divya Rao', email: 'divya.tenant@example.com', phone: '9900055555' },
 ];
 
+// `city` here is a display string ("neighborhood, metro area") baked into
+// location.address - it is NOT the new Property.city enum field (see
+// listingOf below). Every listing needs to land in one of the 4 CITIES
+// (Mumbai/Hyderabad/Pune/Bangalore), so the 4 neighborhoods that used to
+// point elsewhere (Noida/Chennai/Kolkata/Ahmedabad) were swapped for real
+// neighborhoods in those 4 cities instead of dropped, keeping this array at
+// 10 entries so the existing `pick(LOCALITIES, i)` indexing is untouched.
 const LOCALITIES = [
-  { city: 'Andheri East, Mumbai', lat: 19.1136, lng: 72.8697 },
-  { city: 'Koramangala, Bengaluru', lat: 12.9352, lng: 77.6245 },
-  { city: 'Hinjewadi, Pune', lat: 18.5912, lng: 73.7389 },
-  { city: 'Gachibowli, Hyderabad', lat: 17.4401, lng: 78.3489 },
-  { city: 'Sector 62, Noida', lat: 28.6274, lng: 77.3716 },
-  { city: 'Velachery, Chennai', lat: 12.9791, lng: 80.2211 },
-  { city: 'Salt Lake, Kolkata', lat: 22.5850, lng: 88.4075 },
-  { city: 'Satellite, Ahmedabad', lat: 23.0272, lng: 72.5075 },
-  { city: 'Baner, Pune', lat: 18.5590, lng: 73.7868 },
-  { city: 'HSR Layout, Bengaluru', lat: 12.9121, lng: 77.6446 },
+  { city: 'Andheri East, Mumbai', cityValue: 'Mumbai', lat: 19.1136, lng: 72.8697 },
+  { city: 'Koramangala, Bengaluru', cityValue: 'Bangalore', lat: 12.9352, lng: 77.6245 },
+  { city: 'Hinjewadi, Pune', cityValue: 'Pune', lat: 18.5912, lng: 73.7389 },
+  { city: 'Gachibowli, Hyderabad', cityValue: 'Hyderabad', lat: 17.4401, lng: 78.3489 },
+  { city: 'Powai, Mumbai', cityValue: 'Mumbai', lat: 19.1176, lng: 72.9060 },
+  { city: 'Kondapur, Hyderabad', cityValue: 'Hyderabad', lat: 17.4615, lng: 78.3672 },
+  { city: 'Malad West, Mumbai', cityValue: 'Mumbai', lat: 19.1864, lng: 72.8493 },
+  { city: 'Madhapur, Hyderabad', cityValue: 'Hyderabad', lat: 17.4483, lng: 78.3915 },
+  { city: 'Baner, Pune', cityValue: 'Pune', lat: 18.5590, lng: 73.7868 },
+  { city: 'HSR Layout, Bengaluru', cityValue: 'Bangalore', lat: 12.9121, lng: 77.6446 },
 ];
 
 // Every (propertyType, targetAudience) pair EXCEPT these two is populated
@@ -201,6 +208,7 @@ async function buildListings(renterDocs) {
       title: `${propertyType === 'Hostel' ? 'Cozy Hostel' : propertyType === 'Apartment' ? 'Shared Apartment' : 'Comfortable PG'} near ${locality.city.split(',')[0]}`,
       description: `A well-maintained ${propertyType.toLowerCase()} in ${locality.city}, ideal for ${audience === 'co-ed' ? 'working professionals and students' : audience === 'women' ? 'working women and female students' : 'working men and male students'}. Close to public transport, cafes, and IT parks. ${furnishing === 'furnished' ? 'Fully furnished with bed, wardrobe, and study table.' : furnishing === 'semi-furnished' ? 'Semi-furnished with bed and wardrobe.' : 'Unfurnished, ready for move-in.'}`,
       propertyType,
+      city: locality.cityValue,
       targetAudience: audience,
       furnishing,
       petsAllowed: i % 4 === 0,
@@ -247,6 +255,14 @@ function printPlan() {
     const key = `${c.propertyType} + ${c.targetAudience}`;
     console.log(`  ${key}: 0 (deliberately empty)`);
   });
+
+  console.log('\nListings per city:');
+  const cityCounts = {};
+  for (let i = 0; i < TOTAL_LISTINGS; i++) {
+    const locality = pick(LOCALITIES, i);
+    cityCounts[locality.cityValue] = (cityCounts[locality.cityValue] || 0) + 1;
+  }
+  Object.entries(cityCounts).sort().forEach(([k, v]) => console.log(`  ${k}: ${v}`));
 
   console.log('\nListings per amenity (how many of the 21 listings include each):');
   const amenityCounts = {};
@@ -324,6 +340,13 @@ async function seed() {
     const key = `${c.propertyType} + ${c.targetAudience}`;
     if (!counts[key]) console.log(`  ${key}: 0 (deliberately empty)`);
   });
+
+  console.log('\nListings per city:');
+  const cityCounts = {};
+  listingDocs.forEach((l) => {
+    cityCounts[l.city] = (cityCounts[l.city] || 0) + 1;
+  });
+  Object.entries(cityCounts).sort().forEach(([k, v]) => console.log(`  ${k}: ${v}`));
 
   console.log('\nSample login: any seeded email above with password "Password123!"');
   console.log(`Example listing id for manual testing: ${listingDocs[0]._id}`);

@@ -43,6 +43,7 @@ export default function CreateListing() {
   const [uploadError, setUploadError] = useState(null);
 
   // Location & contact
+  const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
@@ -141,7 +142,7 @@ export default function CreateListing() {
       title: title.trim(),
       description: description.trim(),
       propertyType,
-      // Both selects have an unselected "" default and neither is
+      // These selects all have an unselected "" default and none are
       // enforced as required by validateStep(), but the Property model's
       // enum validation rejects "" outright (it's a defined value, not
       // absent, so it still gets checked against the enum and fails -
@@ -149,8 +150,9 @@ export default function CreateListing() {
       // option, exactly like a real user might not). Sending undefined
       // instead of "" makes the field genuinely absent from the request
       // body, so furnishing falls back to the schema's 'unfurnished'
-      // default and targetAudience is simply left unset, instead of
-      // both erroring out.
+      // default and targetAudience/city are simply left unset, instead
+      // of erroring out.
+      city: city || undefined,
       targetAudience: targetAudience || undefined,
       furnishing: furnishing || undefined,
       petsAllowed,
@@ -449,9 +451,21 @@ export default function CreateListing() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label>
+                <div className="text-sm font-medium text-slate-700">City</div>
+                <select value={city} onChange={(e) => setCity(e.target.value)} className="mt-2 w-full border border-slate-200 rounded-md px-3 py-3">
+                  <option value="">Select City</option>
+                  {options.cities.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
                 <div className="text-sm font-medium text-slate-700">Address</div>
                 <input value={address} onChange={(e)=>setAddress(e.target.value)} placeholder="Near X, City" className="mt-2 w-full border border-slate-200 rounded px-3 py-2" />
               </label>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label>
                 <div className="text-sm font-medium text-slate-700">Google Maps URL</div>
                 <input value={googleMapsUrl} onChange={(e)=>setGoogleMapsUrl(e.target.value)} placeholder="https://maps.google.com/..." className="mt-2 w-full border border-slate-200 rounded px-3 py-2" />

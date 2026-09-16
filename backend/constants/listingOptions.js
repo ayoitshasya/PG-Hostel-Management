@@ -13,6 +13,12 @@
 
 const PROPERTY_TYPES = ["PG", "Apartment", "Hostel"];
 
+// Deliberately a fixed, small set rather than free text - Property.location.address
+// stays free-text for display, but filtering needs a discrete field. Expanding
+// this list later means an enum change here plus a migration for existing
+// documents, same as any other value in this file.
+const CITIES = ["Mumbai", "Hyderabad", "Pune", "Bangalore"];
+
 const AUDIENCES = [
   { value: "women", label: "Women" },
   { value: "men", label: "Men" },
@@ -51,4 +57,4 @@ const AMENITIES = [
   { value: "gym", label: "Gym" },
 ];
 
-module.exports = { PROPERTY_TYPES, AUDIENCES, FURNISHING, STATUSES, AMENITIES };
+module.exports = { PROPERTY_TYPES, CITIES, AUDIENCES, FURNISHING, STATUSES, AMENITIES };

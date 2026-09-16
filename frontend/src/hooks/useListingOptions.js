@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchListingOptions } from "../api/meta";
 
-const EMPTY_OPTIONS = { propertyTypes: [], audiences: [], furnishing: [], statuses: [], amenities: [] };
+const EMPTY_OPTIONS = { propertyTypes: [], cities: [], audiences: [], furnishing: [], statuses: [], amenities: [] };
 
 // Shared loading state for GET /api/meta/options. The underlying request
 // itself is cached (see api/meta.js), so mounting this in several
